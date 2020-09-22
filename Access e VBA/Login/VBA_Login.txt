@@ -1,0 +1,61 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim command As ADODB.command
+Dim ConnString As String
+Dim sqlString As String
+Public TipoUtente As String
+Public Codice_utente As String
+
+Private Sub Comando20_Click()
+
+     If Not (IsNull(Me.Testo0) And IsNull(Me.Testo4)) Then
+    
+        Set dbConnection = New ADODB.Connection
+        ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+        dbConnection.Open ConnString, "PROVA", "prova"
+        
+        sqlString = "SELECT * FROM PROVA.LOGIN WHERE USERNAME = '" & Me.Testo0 & "' AND PASSWORD = '" & Me.Testo4 & "'"
+        
+        Set rst = New ADODB.Recordset
+        Set command = New ADODB.command
+        
+        command.CommandText = sqlString
+        command.ActiveConnection = dbConnection
+        
+        'MsgBox sqlString
+        
+        Set rst = command.Execute
+        
+        If rst.EOF Then
+            MsgBox "Username o Password errati. Riprova."
+        Else
+            VarGlobali.Ruolo = rst.Fields("RUOLO")
+            Select Case VarGlobali.Ruolo
+                Case "Admin"
+                    VarGlobali.Codice_utente = rst.Fields("CODICE_ADMIN")
+                Case "Dirigente"
+                    VarGlobali.Codice_utente = rst.Fields("CODICE_STAFF")
+                Case "Dipendente"
+                    VarGlobali.Codice_utente = rst.Fields("CODICE_STAFF")
+                Case "Passeggero"
+                    VarGlobali.Codice_utente = rst.Fields("CODICE_PASSEGGERO")
+            End Select
+            Set rst = Nothing
+            DoCmd.Close
+            DoCmd.OpenForm ("Maschera_home")
+        End If
+    Else
+        MsgBox "Errore. Controlla di aver inserito username e password"
+    End If
+End Sub
+
+Private Sub Comando21_Click()
+    DoCmd.Close
+End Sub
+
+Private Sub Form_Load()
+
+    Me.Testo0 = Null
+    Me.Testo4 = Null
+End Sub

@@ -1,0 +1,22 @@
+Option Compare Database
+
+Private Sub Comando3_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_statistiche")
+End Sub
+
+Private Sub Comando4_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Form_Load()
+    
+    Me.Testo7 = VarGlobali.Codice_utente
+    Me.Testo9 = VarGlobali.Ruolo
+
+    Me.Testo7.Enabled = False
+    Me.Testo9.Enabled = False
+End Sub

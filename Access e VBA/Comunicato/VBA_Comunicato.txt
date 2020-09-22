@@ -1,0 +1,315 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+Dim stmSql As String
+Dim command As ADODB.command
+Dim nuovoRecord As Boolean
+Dim ricercaRecord As Boolean
+
+Private Sub CasellaControllo78_Click()
+    If (nuovoRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+    
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub CasellaControllo87_Click()
+    
+    If (ricercaRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+    
+        ricercaRecord = True
+    Else
+        ricercaRecord = False
+        Form_Load
+    End If
+    
+End Sub
+
+Private Sub Comando70_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando71_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando72_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando73_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando75_Click()
+    On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36) Or IsNull(Me.Testo44)) Then
+            stmSql = "INSERT INTO PROVA.COMUNICATO(ID, PROTOCOLLO_DATI, NOME_AEROPORTO_MANDANTE, NOME_AEROPORTO_DESTINATARIO, TIPOLOGIA, DATA, ORA) VALUES('" & _
+                Me![Testo0].Value & "','" & _
+                Me![Testo4].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo20].Value & "','" & _
+                Me![Testo28].Value & "'," & _
+                 "TO_DATE('" & Me![Testo36].Value & "','DD/MM/YYYY')" & ",'" & _
+                Me![Testo44].Value & "')"
+
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+    
+            MsgBox ("Record inserito con successo.")
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando76_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.COMUNICATO WHERE ID = '" & rst.Fields("ID") & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        'MsgBox stmSQL
+        
+        command.Execute
+        MsgBox ("Record in COMUNICATO eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando77_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36) Or IsNull(Me.Testo44)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+                
+            stmSql = "UPDATE PROVA.COMUNICATO SET " & _
+                    "PROTOCOLLO_DATI = '" & Me.Testo4 & "'," & _
+                    "NOME_AEROPORTO_MANDANTE = '" & Me.Testo12 & "'," & _
+                    "NOME_AEROPORTO_DESTINATARIO = '" & Me.Testo20 & "'," & _
+                    "DATA = TO_DATE('" & Me.Testo36 & "','DD/MM/YYYY')," & _
+                    "ORA = '" & Me.Testo44 & "'," & _
+                    "TIPOLOGIA = '" & Me.Testo28 & "'" & _
+                    "WHERE ID = '" & Me.Testo0 & "'"
+            
+            Set dbConnection = New ADODB.Connection
+            ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+            dbConnection.Open ConnString, "PROVA", "prova"
+            
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            
+            'MsgBox stmSql
+        
+            command.Execute
+            MsgBox ("Record in COMUNICATO modificato con successo.")
+            Set command = Nothing
+        
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando80_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_home")
+End Sub
+
+Private Sub Comando81_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando91_Click()
+    
+    On Error GoTo ErrorHandler
+    If ricercaRecord = True Then
+        
+        If Not (IsNull(Me.Testo0) And IsNull(Me.Testo4) And IsNull(Me.Testo12) And IsNull(Me.Testo20) And IsNull(Me.Testo28) And IsNull(Me.Testo36) And IsNull(Me.Testo44)) Then
+            
+            If Not IsNull(Me.Testo36) Then
+                VarGlobali.Condiviso1 = Testo36.Value
+                Data_Oracle
+            End If
+            
+            If VarGlobali.Ruolo = "Admin" Then
+                sqlString = "SELECT * FROM PROVA.COMUNICATO WHERE ID='" & Me![Testo0].Value & "' OR PROTOCOLLO_DATI='" & Me![Testo4].Value & "' OR NOME_AEROPORTO_MANDANTE='" & Me![Testo12].Value & "' OR NOME_AEROPORTO_DESTINATARIO='" & Me![Testo20].Value & "' OR TIPOLOGIA='" & Me![Testo28].Value & "' OR DATA=TO_DATE('" & VarGlobali.Condiviso1 & "','MM/DD/YYYY')  OR ORA='" & Me![Testo44].Value & "'"
+                'sqlString = "SELECT * FROM PROVA.COMUNICATO WHERE ID='" & Me![Testo0].Value & "'"
+            Else
+                sqlString = "SELECT * FROM PROVA.COMUNICATO WHERE NOME_AEROPORTO_MANDANTE='" & VarGlobali.Condiviso & "' OR NOME_AEROPORTO_DESTINATARIO='" & VarGlobali.Condiviso & "' OR ID='" & Me![Testo0].Value & "' OR PROTOCOLLO_DATI='" & Me![Testo4].Value & "' OR TIPOLOGIA='" & Me![Testo28].Value & "' OR DATA=TO_DATE('" & VarGlobali.Condiviso1 & "','MM/DD/YYYY')  OR ORA='" & Me![Testo44].Value & "'"
+            End If
+            
+            Set rst = New ADODB.Recordset
+            rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+            
+            If rst.BOF Then
+                MsgBox ("Nessun record trovato, controlla di aver inserito valori corretti.")
+                CasellaControllo87.Value = False
+                ricercaRecord = False
+                Form_Load
+            Else
+                MsgBox ("record/s trovato/i con successo.")
+            End If
+        Else
+            MsgBox ("Ricerca non riuscita, controlla di aver inserito almeno un campo")
+            CasellaControllo87.Value = False
+            Form_Load
+        End If
+    End If
+    RefreshData
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+    
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.COMUNICATO"
+    Else
+        sqlString = "SELECT * FROM PROVA.COMUNICATO WHERE NOME_AEROPORTO_MANDANTE='" & VarGlobali.Condiviso & "' OR NOME_AEROPORTO_DESTINATARIO='" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo82 = VarGlobali.Codice_utente
+    Me.Testo84 = VarGlobali.Ruolo
+    
+    Me.Testo82.Enabled = False
+    Me.Testo84.Enabled = False
+    
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("ID")
+        Me.Testo4 = rst.Fields("PROTOCOLLO_DATI")
+        Me.Testo12 = rst.Fields("NOME_AEROPORTO_MANDANTE")
+        Me.Testo20 = rst.Fields("NOME_AEROPORTO_DESTINATARIO")
+        Me.Testo28 = rst.Fields("TIPOLOGIA")
+        Me.Testo36 = rst.Fields("DATA")
+        Me.Testo44 = rst.Fields("ORA")
+    End If
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                CasellaControllo78.Enabled = True
+                CasellaControllo87.Enabled = True
+                Comando70.Enabled = True
+                Comando71.Enabled = True
+                Comando72.Enabled = True
+                Comando73.Enabled = True
+                Comando75.Enabled = True
+                Comando76.Enabled = True
+                Comando77.Enabled = True
+                Comando80.Enabled = True
+                Comando81.Enabled = True
+            Case "Dirigente"
+                CasellaControllo78.Enabled = True
+                CasellaControllo87.Enabled = True
+                Comando70.Enabled = True
+                Comando71.Enabled = True
+                Comando72.Enabled = True
+                Comando73.Enabled = True
+                Comando75.Enabled = True
+                Comando76.Enabled = True
+                Comando77.Enabled = True
+                Comando80.Enabled = True
+                Comando81.Enabled = True
+        End Select
+End Sub
+
+Private Sub Data_Oracle()
+
+    'parsing della data di tipo stringa
+    Dim Conversione_data() As String
+    Conversione_data = Split(VarGlobali.Condiviso1, "/")
+    
+    'switch giorni con mesi
+    Dim Tmp As String
+    Tmp = Conversione_data(0)
+    Conversione_data(0) = Conversione_data(1)
+    Conversione_data(1) = Tmp
+    
+    'ricostruzione data di tipo stringa
+    Dim Data_Stringa As String
+    Data_Stringa = Join(Conversione_data, "/")
+    
+    VarGlobali.Condiviso1 = Data_Stringa
+
+End Sub

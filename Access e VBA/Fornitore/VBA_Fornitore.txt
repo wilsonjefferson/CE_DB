@@ -1,0 +1,353 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+Dim stmSql As String
+Dim command As ADODB.command
+Dim nuovoRecord As Boolean
+Dim ricercaRecord As Boolean
+
+Private Sub CasellaControllo88_Click()
+    If (nuovoRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo66 = Null
+        
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub CasellaControllo92_Click()
+    
+    If (ricercaRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo66 = Null
+        
+        Me.Testo0.Enabled = True
+        Me.Testo4.Enabled = True
+        Me.Testo12.Enabled = True
+        Me.Testo20.Enabled = True
+        Me.Testo28.Enabled = True
+        Me.Testo36.Enabled = True
+        Me.Testo44.Enabled = True
+        Me.Testo66.Enabled = True
+    
+        ricercaRecord = True
+    Else
+        ricercaRecord = False
+        Form_Load
+    End If
+    
+End Sub
+
+Private Sub Comando74_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando75_Click()
+    rst.MovePrevious
+      If (rst.BOF = True Or rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando76_Click()
+    rst.MoveNext
+        If (rst.EOF = True Or rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando77_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando78_Click()
+    On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo66)) Then
+            stmSql = "INSERT INTO PROVA.FORNITORE (NOME, SEDE, IVA, TIPO_FORNITURA, DESCRIZIONE, QUANTITA, COSTO) VALUES('" & _
+                Me![Testo0].Value & "','" & _
+                Me![Testo4].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo28].Value & "','" & _
+                Me![Testo36].Value & "','" & _
+                Me![Testo44].Value & "','" & _
+                Me![Testo66].Value & "')"
+                
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+            
+            stmSql = "INSERT INTO PROVA.TELEFONO_F (NUMERO, IVA_FORNITORE) VALUES('" & _
+                Me![Testo20].Value & "', '" & Me![Testo12].Value & "')"
+                
+            command.CommandText = stmSql
+            command.Execute
+    
+            MsgBox ("Record inserito con successo.")
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando79_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.FORNITORE WHERE IVA = '" & Me.Testo12 & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        command.Execute
+        
+        stmSql = "DELETE FROM PROVA.TELEFONO_F WHERE NUMERO = '" & Me.Testo20 & "'"
+        
+        command.CommandText = stmSql
+        command.Execute
+        
+        MsgBox ("Record in FORNITORE eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando80_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo66)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+                
+            stmSql = "UPDATE PROVA.FORNITORE SET " & _
+                    "NOME = '" & Me.Testo0 & "'," & _
+                    "SEDE = '" & Me.Testo4 & "'," & _
+                    "TIPO_FORNITURA = '" & Me.Testo28 & "'," & _
+                    "DESCRIZIONE = '" & Me.Testo36 & "'," & _
+                    "QUANTITA = '" & Me.Testo44 & "'," & _
+                    "COSTO = '" & Me.Testo66 & "'" & _
+                    "WHERE IVA = '" & Me.Testo12 & "'"
+            
+            Set dbConnection = New ADODB.Connection
+            ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+            dbConnection.Open ConnString, "PROVA", "prova"
+            
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            'MsgBox stmSQL
+        
+            command.Execute
+            
+            stmSql = "UPDATE PROVA.TELEFONO_F " & _
+                    "NUMERO = '" & Me.Testo20 & "'" & _
+                    "WHERE IVA_FORNITORE = '" & Me.Testo12 & "'"
+                    
+            command.CommandText = stmSql
+            
+            MsgBox ("Record in FORNITORE modificato con successo.")
+            Set command = Nothing
+        
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando81_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_link_servizi")
+End Sub
+
+Private Sub Comando82_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando91_Click()
+    
+    On Error GoTo ErrorHandler
+    If ricercaRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) And IsNull(Me.Testo4) And IsNull(Me.Testo12) And IsNull(Me.Testo20) And IsNull(Me.Testo28) And IsNull(Me.Testo36) And IsNull(Me.Testo44) And IsNull(Me.Testo66)) Then
+            
+            If VarGlobali.Ruolo = "Admin" Then
+                sqlString = "SELECT * FROM PROVA.RIFORNIMENTO R INNER JOIN PROVA.FORNITORE F ON R.IVA_FORNITORE=F.IVA JOIN PROVA.TELEFONO_F T ON F.IVA=T.IVA_FORNITORE WHERE F.NOME='" & Me![Testo0].Value & "' OR F.SEDE='" & Me![Testo4].Value & "' OR F.IVA='" & Me![Testo12].Value & "' OR T.NUMERO='" & Me![Testo20].Value & "' OR F.TIPO_FORNITURA='" & Me![Testo28].Value & "' OR F.DESCRIZIONE='" & Me![Testo36].Value & "' OR F.QUANTITA='" & Me![Testo44].Value & "' OR F.COSTO='" & Me![Testo66].Value & "'"
+            Else
+                sqlString = "SELECT * FROM PROVA.RIFORNIMENTO R INNER JOIN PROVA.FORNITORE F ON R.IVA_FORNITORE=F.IVA JOIN PROVA.TELEFONO_F T ON F.IVA=T.IVA_FORNITORE WHERE R.NOME_AEROPORTO='" & VarGlobali.Condiviso & "' OR F.NOME='" & Me![Testo0].Value & "' OR F.SEDE='" & Me![Testo4].Value & "' OR F.IVA='" & Me![Testo12].Value & "' OR T.NUMERO='" & Me![Testo20].Value & "' OR F.TIPO_FORNITURA='" & Me![Testo28].Value & "' OR F.DESCRIZIONE='" & Me![Testo36].Value & "' OR F.QUANTITA='" & Me![Testo44].Value & "' OR F.COSTO='" & Me![Testo66].Value & "'"
+            End If
+            
+            Set rst = New ADODB.Recordset
+            rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+            If rst.BOF Then
+                MsgBox ("Nessun record trovato, controlla di aver inserito valori corretti.")
+                CasellaControllo92.Value = False
+                ricercaRecord = False
+                Form_Load
+            Else
+                MsgBox ("record/s trovato/i con successo.")
+            End If
+        Else
+            MsgBox ("Ricerca non riuscita, controlla di aver inserito almeno un campo")
+            CasellaControllo92.Value = False
+            ricercaRecord = False
+            Form_Load
+        End If
+    End If
+    RefreshData
+    Accesso
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+    
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.FORNITORE F INNER JOIN PROVA.TELEFONO_F T ON F.IVA=T.IVA_FORNITORE"
+    Else
+        sqlString = "SELECT * FROM PROVA.RIFORNIMENTO R INNER JOIN PROVA.FORNITORE F ON R.IVA_FORNITORE=F.IVA JOIN PROVA.TELEFONO_F T ON F.IVA=T.IVA_FORNITORE WHERE R.NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo83 = VarGlobali.Codice_utente
+    Me.Testo85 = VarGlobali.Ruolo
+    
+    Me.Testo83.Enabled = False
+    Me.Testo85.Enabled = False
+    
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("NOME")
+        Me.Testo4 = rst.Fields("SEDE")
+        Me.Testo12 = rst.Fields("IVA")
+        Me.Testo20 = rst.Fields("NUMERO")
+        Me.Testo28 = rst.Fields("TIPO_FORNITURA")
+        Me.Testo36 = rst.Fields("DESCRIZIONE")
+        Me.Testo44 = rst.Fields("QUANTITA")
+        Me.Testo66 = rst.Fields("COSTO")
+    End If
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                CasellaControllo88.Enabled = True
+                CasellaControllo92.Enabled = True
+                Comando74.Enabled = True
+                Comando75.Enabled = True
+                Comando76.Enabled = True
+                Comando77.Enabled = True
+                Comando78.Enabled = True
+                Comando79.Enabled = True
+                Comando80.Enabled = True
+            Case "Dirigente"
+                CasellaControllo88.Enabled = True
+                CasellaControllo92.Enabled = True
+                Comando74.Enabled = True
+                Comando75.Enabled = True
+                Comando76.Enabled = True
+                Comando77.Enabled = True
+                Comando78.Enabled = True
+                Comando79.Enabled = True
+                Comando80.Enabled = True
+                
+            Case "Dipendente"
+                CasellaControllo88.Enabled = False
+                CasellaControllo92.Enabled = True
+                Comando74.Enabled = True
+                Comando75.Enabled = True
+                Comando76.Enabled = True
+                Comando77.Enabled = True
+                Comando78.Enabled = False
+                Comando79.Enabled = False
+                Comando80.Enabled = False
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo36.Enabled = False
+                Me.Testo44.Enabled = False
+                Me.Testo66.Enabled = False
+        End Select
+End Sub
+
+Private Sub Opzione97_GotFocus()
+    
+    'stampa record corrente
+    MsgBox "esecuzione stampa record corrente"
+    DoCmd.OpenReport "Report_fornitore", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "' AND IVA=" & Testo12 & ""
+    Form_Load
+    
+End Sub
+
+Private Sub Opzione99_GotFocus()
+    
+    'stampa tutti i records dell'aeroporto
+    MsgBox "esecuzione stampa tutti i records"
+    DoCmd.OpenReport "Report_fornitore", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    Form_Load
+    
+End Sub

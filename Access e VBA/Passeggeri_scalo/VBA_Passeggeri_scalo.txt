@@ -1,0 +1,82 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+
+Private Sub Comando72_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando73_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando74_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando75_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando76_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_plancia")
+End Sub
+
+Private Sub Comando77_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT P.NOME AS NOME_PASSEGGERO, P.COGNOME, P.PNR_PRENOTAZIONE, S.N_SALA_ATTESA, S.AERO_PARTENZA, S.AERO_DESTINAZIONE, P.TARGA_AEREO FROM PROVA.PASSEGGERO P JOIN PROVA.SCALO S ON P.N_SALA_ATTESA_SCALO=S.N_SALA_ATTESA JOIN PROVA.TERMINAL T ON P.CODICE_TERMINAL=T.CODICE"
+    Else
+        sqlString = "SELECT P.NOME AS NOME_PASSEGGERO, P.COGNOME, P.PNR_PRENOTAZIONE, S.N_SALA_ATTESA, S.AERO_PARTENZA, S.AERO_DESTINAZIONE, P.TARGA_AEREO FROM PROVA.PASSEGGERO P JOIN PROVA.SCALO S ON P.N_SALA_ATTESA_SCALO=S.N_SALA_ATTESA JOIN PROVA.TERMINAL T ON P.CODICE_TERMINAL=T.CODICE WHERE T.NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo78 = VarGlobali.Codice_utente
+    Me.Testo80 = VarGlobali.Ruolo
+    
+    Me.Testo78.Enabled = False
+    Me.Testo80.Enabled = False
+    
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("NOME_PASSEGGERO")
+        Me.Testo4 = rst.Fields("COGNOME")
+        Me.Testo12 = rst.Fields("PNR_PRENOTAZIONE")
+        Me.Testo20 = rst.Fields("N_SALA_ATTESA")
+        Me.Testo28 = rst.Fields("AERO_PARTENZA")
+        Me.Testo36 = rst.Fields("AERO_DESTINAZIONE")
+        Me.Testo44 = rst.Fields("TARGA_AEREO")
+    End If
+End Sub

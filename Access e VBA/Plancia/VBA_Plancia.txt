@@ -1,0 +1,67 @@
+Option Compare Database
+
+Private Sub Comando0_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_fornitori_aeroporti")
+End Sub
+
+Private Sub Comando1_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_specificita_bagaglio")
+End Sub
+
+Private Sub Comando15_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_home")
+End Sub
+
+Private Sub Comando16_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando2_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_welcome_day_passeggeri")
+End Sub
+
+Private Sub Comando3_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_passeggeri_e_bagagli")
+End Sub
+
+Private Sub Comando4_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_passeggeri_e_destinazioni")
+End Sub
+
+Private Sub Comando5_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_passeggeri_scalo")
+End Sub
+
+Private Sub Comando6_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_personale_compagnia")
+End Sub
+
+Private Sub Comando7_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_personale_e_corso_agg")
+End Sub
+
+Private Sub Comando8_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_studenti_dei_corsi")
+End Sub
+
+Private Sub Form_Load()
+    
+    Me.Testo9 = VarGlobali.Codice_utente
+    Me.Testo11 = VarGlobali.Ruolo
+    
+    Me.Testo9.Enabled = False
+    Me.Testo11.Enabled = False
+End Sub

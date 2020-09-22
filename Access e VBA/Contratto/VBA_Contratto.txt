@@ -1,0 +1,259 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+Dim command As ADODB.command
+Dim nuovoRecord As Boolean
+
+Private Sub CasellaControllo71_Click()
+    If (nuovoRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+    
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando62_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando63_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando64_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando65_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando66_Click()
+    On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo12) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36)) Then
+            stmSql = "INSERT INTO PROVA.CONTRATTO(CODICE_CONTRATTO_DIPENDENTE, ORARIO_PERM,SICUREZZA_E_SALUTE, MATERNITA, SALARIO, FERIE) VALUES('" & _
+                Me![Testo0].Value & "','" & _
+                Me![Testo4].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo20].Value & "','" & _
+                Me![Testo28].Value & "','" & _
+                Me![Testo36].Value & "')"
+                
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+    
+            MsgBox ("Record inserito con successo.")
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando67_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.CONTRATTO WHERE CODICE_CONTRATTO_DIPENDENTE = '" & rst.Fields("CODICE_CONTRATTO_DIPENDENTE") & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        'MsgBox stmSQL
+        
+        command.Execute
+        MsgBox ("Record in CONTRATTO eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando68_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo12) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+                
+            stmSql = "UPDATE PROVA.CONTRATTO SET " & _
+                    "ORARIO_PERM = '" & Me.Testo4 & "'," & _
+                    "SICUREZZA_E_SALUTE = '" & Me.Testo12 & "'," & _
+                    "MATERNITA = '" & Me.Testo20 & "'," & _
+                    "SALARIO = '" & Me.Testo28 & "'," & _
+                    "FERIE = '" & Me.Testo36 & "'" & _
+                    "WHERE CODICE_CONTRATTO_DIPENDENTE = '" & Me.Testo0 & "'"
+        
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            'MsgBox stmSQL
+        
+            command.Execute
+            MsgBox ("Record in CONTRATTO modificato con successo.")
+            Set command = Nothing
+        
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando69_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_personale")
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.CONTRATTO"
+    Else
+        If VarGlobali.Ruolo = "Dirigente" Then
+            sqlString = "SELECT * FROM PROVA.CONTRATTO C JOIN PROVA.PERSONALE P ON C.CODICE_CONTRATTO_DIPENDENTE=P.CODICE_CONTRATTO WHERE P.NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+        Else
+            sqlString = "SELECT * FROM PROVA.CONTRATTO C JOIN PROVA.PERSONALE P ON C.CODICE_CONTRATTO_DIPENDENTE=P.CODICE_CONTRATTO WHERE P.CODICE_STAFF='" & VarGlobali.Codice_utente & "'"
+        End If
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo73 = VarGlobali.Codice_utente
+    Me.Testo75 = VarGlobali.Ruolo
+
+    Me.Testo73.Enabled = False
+    Me.Testo75.Enabled = False
+
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("CODICE_CONTRATTO_DIPENDENTE")
+        Me.Testo4 = rst.Fields("ORARIO_PERM")
+        Me.Testo12 = rst.Fields("SICUREZZA_E_SALUTE")
+        Me.Testo20 = rst.Fields("MATERNITA")
+        Me.Testo28 = rst.Fields("SALARIO")
+        Me.Testo36 = rst.Fields("FERIE")
+    End If
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                CasellaControllo71.Enabled = True
+                Opzione81.Enabled = True
+                Opzione83.Enabled = True
+                
+                Comando62.Enabled = True
+                Comando63.Enabled = True
+                Comando64.Enabled = True
+                Comando65.Enabled = True
+                Comando66.Enabled = True
+                Comando67.Enabled = True
+                Comando68.Enabled = True
+                Comando69.Enabled = True
+                Comando70.Enabled = True
+            Case "Dirigente"
+                CasellaControllo71.Enabled = True
+                Opzione81.Enabled = True
+                Opzione83.Enabled = True
+                
+                Comando62.Enabled = True
+                Comando63.Enabled = True
+                Comando64.Enabled = True
+                Comando65.Enabled = True
+                Comando66.Enabled = True
+                Comando67.Enabled = True
+                Comando68.Enabled = True
+                Comando69.Enabled = True
+                Comando70.Enabled = True
+            Case "Dipendente"
+                CasellaControllo71.Enabled = False
+                Opzione81.Enabled = True
+                Opzione83.Enabled = False
+                
+                Comando62.Enabled = False
+                Comando63.Enabled = False
+                Comando64.Enabled = False
+                Comando65.Enabled = False
+                Comando66.Enabled = False
+                Comando67.Enabled = False
+                Comando68.Enabled = False
+                Comando69.Enabled = True
+                Comando70.Enabled = True
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo36.Enabled = False
+        End Select
+End Sub
+
+Private Sub Opzione81_GotFocus()
+    
+    'stampa record corrente
+    MsgBox "esecuzione stampa record corrente"
+    DoCmd.OpenReport "Report_contratto", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "' AND CODICE_CONTRATTO_DIPENDENTE='" & Me.Testo0 & "'"
+    Form_Load
+    
+End Sub
+
+Private Sub Opzione83_GotFocus()
+    
+    'stampa tutti i records dell'aeroporto
+    MsgBox "esecuzione stampa tutti i records"
+    DoCmd.OpenReport "Report_contratto", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    Form_Load
+    
+End Sub

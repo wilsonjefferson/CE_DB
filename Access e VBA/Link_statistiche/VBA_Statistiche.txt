@@ -1,0 +1,52 @@
+Option Compare Database
+
+Private Sub Comando0_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_numero_voli")
+End Sub
+
+Private Sub Comando13_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_home")
+End Sub
+
+Private Sub Comando14_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando2_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_numero_bagagli")
+End Sub
+
+Private Sub Comando3_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_numero_passeggeri")
+End Sub
+
+Private Sub Comando4_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_numero_prenotazioni")
+End Sub
+
+Private Sub Comando5_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_media_fornitori")
+End Sub
+
+Private Sub Comando6_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_salario_medio")
+End Sub
+
+Private Sub Form_Load()
+    
+    Me.Testo8 = VarGlobali.Codice_utente
+    Me.Testo10 = VarGlobali.Ruolo
+    
+    Me.Testo8.Enabled = False
+    Me.Testo10.Enabled = False
+End Sub

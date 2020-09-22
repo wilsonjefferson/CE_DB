@@ -1,0 +1,270 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+Dim command As ADODB.command
+Dim nuovoRecord As Boolean
+
+Private Sub CasellaControllo90_Click()
+    If (nuovoRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo52 = Null
+    
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando83_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando84_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando85_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando86_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando87_Click()
+    On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo36)) Then
+            stmSql = "INSERT INTO PROVA.CONTRATTO_ENTE(CODICE_CONTRATTO, IVA_ADD, RESPONSABILE_ADD, AFFITTO, SICUREZZA_E_SALUTE, ORARIO_ATTIVITA, PERIODO, RINNOVO) VALUES('" & _
+                Me![Testo0].Value & "','" & _
+                Me![Testo4].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo20].Value & "','" & _
+                Me![Testo28].Value & "','" & _
+                Me![Testo36].Value & "','" & _
+                Me![Testo44].Value & "','" & _
+                Me![Testo52].Value & "')"
+                
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+    
+            MsgBox "eseguito"
+            
+            Testo36_AfterUpdate
+            MsgBox VarGlobali.Condiviso1
+            
+            If VarGlobali.Condiviso1 = 0 Then
+                MsgBox ("Record inserito con successo.")
+            Else
+                stmSql = "DELETE FROM PROVA.CONTRATTO_ENTE WHERE CODICE_CONTRATTO = '" & rst.Fields("CODICE_CONTRATTO") & "'"
+                command.CommandText = stmSql
+                command.Execute
+                MsgBox ("Record in CONTRATTO_ENTE eliminato con successo.")
+                
+            End If
+            
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando88_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.CONTRATTO_ENTE WHERE CODICE_CONTRATTO = '" & rst.Fields("CODICE_CONTRATTO") & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        'MsgBox stmSQL
+        
+        command.Execute
+        MsgBox ("Record in CONTRATTO_ENTE eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando89_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo36)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+                
+            stmSql = "UPDATE PROVA.CONTRATTO_ENTE SET " & _
+                    "IVA_ADD = '" & Me.Testo4 & "'," & _
+                    "RESPONSABILE_ADD = '" & Me.Testo12 & "'," & _
+                    "AFFITTO = '" & Me.Testo20 & "'," & _
+                    "SICUREZZA_E_SALUTE = '" & Me.Testo28 & "'," & _
+                    "ORARIO_ATTIVITA = '" & Me.Testo36 & "'," & _
+                    "PERIODO = '" & Me.Testo44 & "'," & _
+                    "RINNOVO = '" & Me.Testo52 & "'" & _
+                    "WHERE CODICE_CONTRATTO = '" & Me.Testo0 & "'"
+        
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            'MsgBox stmSQL
+            
+            Testo36_AfterUpdate
+            If VarGlobali.Condiviso1 = 0 Then
+                command.Execute
+                MsgBox ("Record in CONTRATTO_ENTE modificato con successo.")
+                Set command = Nothing
+            End If
+                
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando92_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_servizio_add")
+End Sub
+
+Private Sub Comando93_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.CONTRATTO_ENTE"
+    Else
+        sqlString = "SELECT * FROM PROVA.MUNITO M JOIN PROVA.SERVIZIO_ADD S ON M.IVA_ADD=S.IVA JOIN PROVA.CONTRATTO_ENTE C ON S.IVA=C.IVA_ADD WHERE C.IVA_ADD='" & VarGlobali.Condiviso1 & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo94 = VarGlobali.Codice_utente
+    Me.Testo96 = VarGlobali.Ruolo
+    
+    Me.Testo94.Enabled = False
+    Me.Testo96.Enabled = False
+    
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("CODICE_CONTRATTO")
+        Me.Testo4 = rst.Fields("IVA_ADD")
+        Me.Testo12 = rst.Fields("RESPONSABILE_ADD")
+        Me.Testo20 = rst.Fields("AFFITTO")
+        Me.Testo28 = rst.Fields("SICUREZZA_E_SALUTE")
+        Me.Testo36 = rst.Fields("ORARIO_ATTIVITA")
+        Me.Testo44 = rst.Fields("PERIODO")
+        Me.Testo52 = rst.Fields("RINNOVO")
+    End If
+End Sub
+
+Private Sub Accesso()
+    
+    If VarGlobali.Ruolo = "Dirigente" Then
+        Opzione102.Enabled = True
+        Opzione104.Enabled = False
+        
+        Comando83.Enabled = False
+        Comando84.Enabled = False
+        Comando85.Enabled = False
+        Comando86.Enabled = False
+    End If
+End Sub
+
+Private Sub Opzione102_GotFocus()
+    
+    'stampa record corrente
+    MsgBox "esecuzione stampa record corrente"
+    DoCmd.OpenReport "Report_contratto_ente", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "' AND CODICE_CONTRATTO='" & Me.Testo0 & "'"
+    Form_Load
+    
+End Sub
+
+Private Sub Opzione104_GotFocus()
+    
+    'stampa record corrente
+    MsgBox "esecuzione stampa tutti i records"
+    DoCmd.OpenReport "Report_contratto_ente", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    Form_Load
+    
+End Sub
+
+Private Sub Testo36_AfterUpdate()
+    
+    sqlString = "SELECT * FROM PROVA.SERVIZIO_ADD S JOIN PROVA.CONTRATTO_ENTE C ON S.IVA=C.IVA_ADD AND S.RESPONSABILE=C.RESPONSABILE_ADD WHERE S.IVA='" & Me.Testo4 & "' AND S.RESPONSABILE = '" & Me.Testo12 & "'"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    VarGlobali.Condiviso1 = 0
+    
+    If rst.Fields("TIPO_SERVIZIO") = "Ristorazione" Then
+        If rst.Fields("ORARIO_ATTIVITA") > 15 Then
+            MsgBox "ERRORE: Le attività di ristorazione ammettono fino ad un massimo di 15 ore di attività."
+            RefreshData
+            VarGlobali.Condiviso1 = 1
+        End If
+    Else
+        If rst.Fields("ORARIO_ATTIVITA") > 12 Then
+            MsgBox "ERRORE: Le attività commerciali ammettono fino ad un massimo di 12 ore di attività."
+            RefreshData
+            VarGlobali.Condiviso1 = 1
+        End If
+    End If
+End Sub

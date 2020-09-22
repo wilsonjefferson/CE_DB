@@ -1,0 +1,363 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+Dim stmSql As String
+Dim command As ADODB.command
+Dim nuovoRecord As Boolean
+Dim ricercaRecord As Boolean
+
+Private Sub CasellaControllo110_Click()
+    If (nuovoRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo52 = Null
+        Me.Testo60 = Null
+        Me.Testo68 = Null
+    
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub CasellaControllo118_Click()
+    
+    If (ricercaRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo52 = Null
+        Me.Testo60 = Null
+        Me.Testo68 = Null
+    
+        ricercaRecord = True
+    Else
+        ricercaRecord = False
+        Form_Load
+    End If
+    
+End Sub
+
+Private Sub Comando101_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando102_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando103_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando104_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando105_Click()
+    On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36) Or IsNull(Me.Testo44) Or IsNull(Me.Testo52) Or IsNull(Me.Testo60) Or IsNull(Me.Testo68)) Then
+            stmSql = "INSERT INTO PROVA.BAGAGALIO(PNR, PNR_PRENOTAZIONE, TARGA_AEREO, CAPACITA, ASSICURAZIONE, TIPO, PESO, ALTEZZA, LARGHEZZA, PROFONDITA) VALUES('" & _
+                Me![Testo0].Value & "','" & _
+                Me![Testo4].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo20].Value & "','" & _
+                Me![Testo28].Value & "','" & _
+                Me![Testo36].Value & "','" & _
+                Me![Testo44].Value & "','" & _
+                Me![Testo52].Value & "','" & _
+                Me![Testo60].Value & "','" & _
+                Me![Testo68].Value & "')"
+                
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+            
+            Testo20_AfterUpdate
+            If VarGlobali.Condiviso1 = 0 Then
+                MsgBox ("Record inserito con successo.")
+            Else
+                MsgBox ("Record non valido: superata la capacità della stiva dell'aereo.")
+                stmSql = "DELETE FROM PROVA.BAGAGLIO WHERE PIR = '" & rst.Fields("PIR") & "' AND PNR_PRENOTAZIONE = '" & rst.Fields("PNR_PRENOTAZIONE") & "'"
+                command.CommandText = stmSql
+                command.Execute
+            End If
+            
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando106_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.BAGAGLIO WHERE PIR = '" & rst.Fields("PIR") & "' AND PNR_PRENOTAZIONE = '" & rst.Fields("PNR_PRENOTAZIONE") & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        'MsgBox stmSQL
+        
+        command.Execute
+        MsgBox ("Record in BAGAGLIO eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando107_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36) Or IsNull(Me.Testo44) Or IsNull(Me.Testo52) Or IsNull(Me.Testo60) Or IsNull(Me.Testo68)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+                
+            stmSql = "UPDATE PROVA.BAGAGLIO SET " & _
+                    "TARGA_AEREO = '" & Me.Testo12 & "'," & _
+                    "ASSICURAZIONE = '" & Me.Testo28 & "'," & _
+                    "PESO = '" & Me.Testo44 & "'," & _
+                    "ALTEZZA = '" & Me.Testo52 & "'," & _
+                    "LARGHEZZA = '" & Me.Testo60 & "'," & _
+                    "PROFONDITA = '" & Me.Testo68 & "'," & _
+                    "TIPO = '" & Me.Testo36 & "'," & _
+                    "CAPACITA = '" & Me.Testo20 & "'" & _
+                    "WHERE PIR = '" & Me.Testo0 & "' OR PNR_PRENOTAZIONE = '" & Me.Testo4 & "'"
+                    
+            Testo20_AfterUpdate
+            If VarGlobali.Condiviso1 = 0 Then
+                Set command = New ADODB.command
+                command.CommandType = adCmdText
+                command.ActiveConnection = dbConnection
+                command.CommandText = stmSql
+        
+                command.Execute
+                MsgBox ("Record in BAGAGLIO modificato con successo.")
+                Set command = Nothing
+            End If
+            
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando108_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_passeggero")
+End Sub
+
+Private Sub Comando109_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando91_Click()
+    
+    On Error GoTo ErrorHandler
+    If ricercaRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) And IsNull(Me.Testo4) And IsNull(Me.Testo12) And IsNull(Me.Testo20) And IsNull(Me.Testo28) And IsNull(Me.Testo36) And IsNull(Me.Testo44) And IsNull(Me.Testo52) And IsNull(Me.Testo60) And IsNull(Me.Testo68)) Then
+            
+            If VarGlobali.Ruolo = "Admin" Then
+                sqlString = "SELECT * FROM PROVA.BAGAGLIO WHERE PIR='" & Me![Testo0].Value & "' OR PNR_PRENOTAZIONE='" & Me![Testo4].Value & "' OR TARGA_AEREO='" & Me![Testo12].Value & "' OR CAPACITA='" & Me![Testo20].Value & "' OR ASSICURAZIONE='" & Me![Testo28].Value & "' OR TIPO='" & Me![Testo36].Value & "' OR PESO='" & Me![Testo44].Value & "' OR ALTEZZA='" & Me![Testo52].Value & "' OR LARGHEZZA='" & Me![Testo60].Value & "' OR PROFONDITA='" & Me![Testo68].Value & "'"
+            Else
+                sqlString = "SELECT * FROM PROVA.BAGAGLIO B JOIN PROVA.PRENOTAZIONE P1 ON B.PNR_PRENOTAZIONE=P1.PNR JOIN PROVA.PASSEGGERO P2 ON P1.PNR=P2.PNR_PRENOTAZIONE WHERE P2.CI='" & VarGlobali.Codice_utente & "' AND (B.PIR='" & Me![Testo0].Value & "' OR B.PNR_PRENOTAZIONE='" & Me![Testo4].Value & "' OR B.TARGA_AEREO='" & Me![Testo12].Value & "' OR B.CAPACITA='" & Me![Testo20].Value & "' OR B.ASSICURAZIONE='" & Me![Testo28].Value & "' OR B.TIPO='" & Me![Testo36].Value & "' OR B.PESO='" & Me![Testo44].Value & "' OR B.ALTEZZA='" & Me![Testo52].Value & "' OR B.LARGHEZZA='" & Me![Testo60].Value & "' OR B.PROFONDITA='" & Me![Testo68].Value & "')"
+            End If
+    
+            Set rst = New ADODB.Recordset
+            rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+            If rst.BOF Then
+                MsgBox ("Nessun record trovato, controlla di aver inserito valori corretti.")
+                CasellaControllo118.Value = False
+                ricercaRecord = False
+                Form_Load
+            Else
+                MsgBox ("record/s trovato/i con successo.")
+            End If
+        Else
+            MsgBox ("Ricerca non riuscita, controlla di aver inserito almeno un campo")
+            CasellaControllo118.Value = False
+            Form_Load
+        End If
+    End If
+    RefreshData
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+    
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.BAGAGLIO"
+    Else
+        sqlString = "SELECT * FROM PROVA.BAGAGLIO B JOIN PROVA.PRENOTAZIONE P1 ON B.PNR_PRENOTAZIONE=P1.PNR JOIN PROVA.PASSEGGERO P2 ON P1.PNR=P2.PNR_PRENOTAZIONE WHERE P2.CI='" & VarGlobali.Codice_utente & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo112 = VarGlobali.Codice_utente
+    Me.Testo115 = VarGlobali.Ruolo
+    
+    Me.Testo112.Enabled = False
+    Me.Testo115.Enabled = False
+    
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("PIR")
+        Me.Testo4 = rst.Fields("PNR_PRENOTAZIONE")
+        Me.Testo12 = rst.Fields("TARGA_AEREO")
+        Me.Testo20 = rst.Fields("CAPACITA")
+        Me.Testo28 = rst.Fields("ASSICURAZIONE")
+        Me.Testo36 = rst.Fields("TIPO")
+        Me.Testo44 = rst.Fields("PESO")
+        Me.Testo52 = rst.Fields("ALTEZZA")
+        Me.Testo60 = rst.Fields("LARGHEZZA")
+        Me.Testo68 = rst.Fields("PROFONDITA")
+    End If
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                CasellaControllo110.Enabled = True
+                CasellaControllo118.Enabled = True
+                Comando101.Enabled = True
+                Comando102.Enabled = True
+                Comando103.Enabled = True
+                Comando104.Enabled = True
+                Comando105.Enabled = True
+                Comando106.Enabled = True
+                Comando107.Enabled = True
+            Case "Dirigente"
+                CasellaControllo110.Enabled = True
+                CasellaControllo118.Enabled = True
+                Comando101.Enabled = True
+                Comando102.Enabled = True
+                Comando103.Enabled = True
+                Comando104.Enabled = True
+                Comando105.Enabled = True
+                Comando106.Enabled = True
+                Comando107.Enabled = True
+            Case "Dipendente"
+                CasellaControllo110.Enabled = False
+                CasellaControllo118.Enabled = False
+                Comando101.Enabled = True
+                Comando102.Enabled = True
+                Comando103.Enabled = True
+                Comando104.Enabled = True
+                Comando105.Enabled = False
+                Comando106.Enabled = False
+                Comando107.Enabled = False
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo36.Enabled = False
+                Me.Testo44.Enabled = False
+                Me.Testo52.Enabled = False
+                Me.Testo60.Enabled = False
+                Me.Testo68.Enabled = False
+            Case "Passeggero"
+                CasellaControllo110.Enabled = False
+                CasellaControllo118.Enabled = False
+                Comando101.Enabled = True
+                Comando102.Enabled = True
+                Comando103.Enabled = True
+                Comando104.Enabled = True
+                Comando105.Enabled = False
+                Comando106.Enabled = False
+                Comando107.Enabled = False
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo36.Enabled = False
+                Me.Testo44.Enabled = False
+                Me.Testo52.Enabled = False
+                Me.Testo60.Enabled = False
+                Me.Testo68.Enabled = False
+        End Select
+End Sub
+
+Private Sub Testo20_AfterUpdate()
+
+    VarGlobali.Condiviso1 = 0
+    
+    sqlString = "SELECT SUM(PROFONDTA*LARGHEZZA*ALTEZZA) AS VOLUME FROM PROVA.BAGAGLIO"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    If Me.Testo20 <= rst.Fields("VOLUME") Then
+        MsgBox ("ERRORE: si è raggiunta la capacità massima della stiva, non sono ammessi altri bagagli.")
+        RefreshData
+        VarGlobali.Condiviso1 = 1
+    End If
+End Sub
+

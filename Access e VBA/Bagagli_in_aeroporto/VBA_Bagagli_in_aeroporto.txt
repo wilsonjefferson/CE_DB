@@ -1,0 +1,81 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+
+Private Sub Comando60_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando61_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando62_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando63_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando64_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_plancia")
+End Sub
+
+Private Sub Comando65_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT UNIQUE(B.PIR), B.ALTEZZA, B.LARGHEZZA, B.PROFONDITA, B.TARGA_AEREO, B.CAPACITA FROM PROVA.BAGAGLIO B JOIN PROVA.AEREO A ON B.TARGA_AEREO=A.TARGA JOIN PROVA.VOLO V ON A.TARGA=V.TARGA_AEREO"
+    Else
+        sqlString = "SELECT UNIQUE(B.PIR), B.ALTEZZA, B.LARGHEZZA, B.PROFONDITA, B.TARGA_AEREO, B.CAPACITA FROM PROVA.BAGAGLIO B JOIN PROVA.AEREO A ON B.TARGA_AEREO=A.TARGA JOIN PROVA.VOLO V ON A.TARGA=V.TARGA_AEREO WHERE V.AERO_PARTENZA='" & VarGlobali.Condiviso & "' OR V.AERO_DESTINAZIONE='" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo66 = VarGlobali.Codice_utente
+    Me.Testo68 = VarGlobali.Ruolo
+    
+    Me.Testo66.Enabled = False
+    Me.Testo68.Enabled = False
+    
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("PIR")
+        Me.Testo4 = rst.Fields("ALTEZZA")
+        Me.Testo12 = rst.Fields("LARGHEZZA")
+        Me.Testo20 = rst.Fields("PROFONDITA")
+        Me.Testo28 = rst.Fields("TARGA_AEREO")
+        Me.Testo36 = rst.Fields("CAPACITA")
+    End If
+End Sub

@@ -1,0 +1,81 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+
+Private Sub Comando50_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando51_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando52_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando53_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando54_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_plancia")
+End Sub
+
+Private Sub Comando55_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.PRENOTAZIONE P JOIN PROVA.AEREO A ON P.TARGA_AEREO=A.TARGA JOIN PROVA.VOLO V ON A.TARGA=V.TARGA_AEREO"
+    Else
+        sqlString = "SELECT * FROM PROVA.PRENOTAZIONE P JOIN PROVA.AEREO A ON P.TARGA_AEREO=A.TARGA JOIN PROVA.VOLO V ON A.TARGA=V.TARGA_AEREO WHERE V.AERO_PARTENZA='" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo56 = VarGlobali.Codice_utente
+    Me.Testo58 = VarGlobali.Ruolo
+    
+    Me.Testo56.Enabled = False
+    Me.Testo58.Enabled = False
+    
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("NOMINATIVO")
+        Me.Testo4 = rst.Fields("POSTO")
+        Me.Testo12 = rst.Fields("AERO_DESTINAZIONE")
+        Me.Testo20 = rst.Fields("TARGA_AEREO")
+        Me.Testo28 = rst.Fields("NUMERO")
+    End If
+End Sub
+

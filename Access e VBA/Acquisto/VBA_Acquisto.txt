@@ -1,0 +1,753 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim command As ADODB.command
+Dim ConnString As String
+Dim sqlString As String
+Dim Pnr As String
+Dim Pir As String
+Dim BagaglioInserito As Boolean
+Dim ViaggioInserito As Boolean
+Dim Posto As Integer
+
+Private Sub CasellaCombinata11_Change()
+    
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    'dato che la data di partenza viene passata nel formato italiano DD/MM/YYYY, e dato che oracle presenta la data nel formato MM/DD/YYYY
+    'bisogna usare la funzione TO_DATE per trasformare la data di tipo stringa in tipo data con il fomrato di oracle, ma prima di far ciò
+    'è necessario invertire il giorno con la data per poter avere la validazione della stringa come data. Per far ciò si esegue un parsing
+    'della stringa della data (tramite la funzione Split) e si invertono i giorni con i mesi (tramite paramtro temporaneo), per poi ricostruire
+    'la stringa della data (tramite la funzione Join); ora la data di tipo stringa è nel formato MM/DD/YYYY ed è accettata da oracle (una volta
+    'passata nella funzione TO_DATE, all'interno della query di selezione).
+    
+    VarGlobali.Condiviso1 = CasellaCombinata11.Value
+    Data_Oracle
+    
+    '---CASELLA COMBINATA ORA_PARTENZA---
+    'si vanno a selezionare voli in cui l'aereo non è saturo
+    sqlString = "SELECT V.ORA_PARTENZA FROM PROVA.VOLO V INNER JOIN PROVA.AEREO A ON V.TARGA_AEREO=A.TARGA WHERE AERO_PARTENZA='" & CasellaCombinata7.Value & "' AND AERO_DESTINAZIONE='" & CasellaCombinata9.Value & "' AND A.POSTI_TOT<>A.POSTI_ASSEGNATI AND DATA_PARTENZA = TO_DATE('" & VarGlobali.Condiviso1 & "','MM/DD/YYYY')"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    If rst.EOF Then
+        MsgBox "attenzione: non sono stati trovati voli."
+        Form_Load
+    End If
+     
+    Me.CasellaCombinata71.RowSourceType = "Value List"
+    Me.CasellaCombinata71.RowSource = ""
+    
+    While Not rst.EOF
+            CasellaCombinata71.AddItem rst.Fields("ORA_PARTENZA")
+            rst.MoveNext
+    Wend
+    Me.CasellaCombinata71 = Null
+    
+    Me.CasellaCombinata11.Enabled = False
+    Me.CasellaCombinata71.Enabled = True
+    
+End Sub
+
+Private Sub CasellaCombinata13_Change()
+    
+    '---CASELLA COMBINATA AERO_PARTENZA---
+    'sqlString = "SELECT DISTINCT V.AERO_PARTENZA FROM PROVA.VOLO V INNER JOIN PROVA.AEREO A ON V.TARGA_AEREO=A.TARGA WHERE V.AERO_PARTENZA IN ('Malpensa', 'Mantova', 'Bergamo', 'Linate', 'Alzante') AND V.ORA_PARTENZA >= '" & Me.Testo0 & "' AND A.POSTI_TOT<>A.POSTI_ASSEGNATI"
+    sqlString = "SELECT DISTINCT AERO_PARTENZA FROM VOLO WHERE AERO_PARTENZA IN ('Malpensa', 'Mantova', 'Bergamo', 'Linate', 'Alzante')"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+     
+    Me.CasellaCombinata7.RowSourceType = "Value List"
+    Me.CasellaCombinata7.RowSource = ""
+    
+    While Not rst.EOF
+            CasellaCombinata7.AddItem rst.Fields("AERO_PARTENZA")
+            rst.MoveNext
+    Wend
+    Me.CasellaCombinata7 = Null
+    
+    Me.CasellaCombinata13.Enabled = False
+    Me.CasellaCombinata7.Enabled = True
+End Sub
+
+Private Sub CasellaCombinata15_Change()
+    
+    '---CASELLA COMBINATA COMPAGNIA_DI_VOLO---
+    If CasellaCombinata15.Value = "Sky Scanner" Or Me.CasellaCombinata15.Value = "Hipmunk" Then
+        sqlString = "SELECT DISTINCT NOME FROM COMPAGNIA"
+    Else
+        sqlString = "SELECT NOME FROM COMPAGNIA WHERE NOME='" & CasellaCombinata15.Value & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+     
+    Me.CasellaCombinata13.RowSourceType = "Value List"
+    Me.CasellaCombinata13.RowSource = ""
+    
+    While Not rst.EOF
+            CasellaCombinata13.AddItem rst.Fields("NOME")
+            rst.MoveNext
+    Wend
+    Me.CasellaCombinata13 = Null
+    
+    Me.CasellaCombinata15.Enabled = False
+    Me.CasellaCombinata13.Enabled = True
+End Sub
+
+Private Sub CasellaCombinata32_Change()
+    Me.CasellaCombinata32.Enabled = False
+    
+    ViaggioInserito = True
+    Controllo
+    
+End Sub
+
+Private Sub CasellaCombinata34_Change()
+    
+    If Not (IsNull(Me.Testo39) Or IsNull(Me.Testo41) Or IsNull(Me.Testo43) Or IsNull(Me.Testo45) Or IsNull(Me.Testo39) Or IsNull(Me.CasellaCombinata36)) Then
+        
+        If Me.Testo39.Value > 40 Or Me.Testo41.Value > 120 Or Me.Testo43.Value > 120 Or Me.Testo45.Value > 80 Then
+            MsgBox "attenzione: il bagaglio non rispetta le dimensioni."
+            Me.CasellaCombinata34 = Null
+        Else
+            Me.CasellaCombinata34.Enabled = False
+            Me.CasellaCombinata36.Enabled = False
+            
+            Me.Testo39.Enabled = False
+            Me.Testo41.Enabled = False
+            Me.Testo43.Enabled = False
+            Me.Testo45.Enabled = False
+            
+            Me.Interruttore58.Enabled = False
+            Me.Interruttore59.Enabled = False
+            
+            BagaglioInserito = True
+            
+            Controllo
+        End If
+         
+    Else
+        MsgBox "attenzione: non sono stati completati tutti i campi sui dati del bagaglio."
+        Me.CasellaCombinata34 = Null
+    End If
+End Sub
+
+Private Sub CasellaCombinata7_Change()
+    
+    '---CASELLA COMBINATA AERO_DESTINAZIONE---
+    sqlString = "SELECT DISTINCT AERO_DESTINAZIONE FROM PROVA.VOLO WHERE AERO_PARTENZA='" & CasellaCombinata7.Value & "'"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+     
+    Me.CasellaCombinata9.RowSourceType = "Value List"
+    Me.CasellaCombinata9.RowSource = ""
+    
+    While Not rst.EOF
+            CasellaCombinata9.AddItem rst.Fields("AERO_DESTINAZIONE")
+            rst.MoveNext
+    Wend
+    Me.CasellaCombinata9 = Null
+    
+    Me.CasellaCombinata7.Enabled = False
+    Me.CasellaCombinata9.Enabled = True
+End Sub
+
+Private Sub CasellaCombinata71_Change()
+    
+    '---CASELLA COMBINATA IMBARCO_PRIORITARIO---
+    sqlString = "SELECT DISTINCT IMBARCO_PRIORITARIO FROM PRENOTAZIONE"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+     
+    Me.CasellaCombinata32.RowSourceType = "Value List"
+    Me.CasellaCombinata32.RowSource = ""
+    
+    While Not rst.EOF
+            CasellaCombinata32.AddItem rst.Fields("IMBARCO_PRIORITARIO")
+            rst.MoveNext
+    Wend
+    Me.CasellaCombinata32 = Null
+    
+    Me.CasellaCombinata71.Enabled = False
+    Me.CasellaCombinata32.Enabled = True
+        
+End Sub
+
+Private Sub CasellaCombinata9_Change()
+    
+    VarGlobali.Condiviso1 = Testo0.Value
+    Data_Oracle
+    
+    '---CASELLA COMBINATA DATA_PARTENZA---
+    sqlString = "SELECT DISTINCT V.DATA_PARTENZA FROM PROVA.VOLO V JOIN PROVA.AEREO A ON V.TARGA_AEREO= A.TARGA WHERE V.AERO_PARTENZA='" & CasellaCombinata7.Value & "' AND V.AERO_DESTINAZIONE='" & CasellaCombinata9.Value & "' AND A.POSTI_TOT <> A.POSTI_ASSEGNATI AND V.DATA_PARTENZA >= TO_DATE('" & VarGlobali.Condiviso1 & "','MM/DD/YYYY')"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    If rst.EOF Then
+        MsgBox "attenzione: non sono presenti voli sulla base dei campi che hai compilato fin'ora, cambia viaggio."
+        Form_Load
+    Else
+        Me.CasellaCombinata11.RowSourceType = "Value List"
+        Me.CasellaCombinata11.RowSource = ""
+        
+        While Not rst.EOF
+            CasellaCombinata11.AddItem rst.Fields("DATA_PARTENZA")
+            rst.MoveNext
+        Wend
+        Me.CasellaCombinata11 = Null
+        
+        Me.CasellaCombinata9.Enabled = False
+        Me.CasellaCombinata11.Enabled = True
+    End If
+End Sub
+
+Private Sub Comando118_Click()
+    On Error GoTo ErrorHandler
+    
+    If IsNull(Me.Testo5) Then
+        MsgBox "attenzione: non hai ancora completato l'acquisto, inserisci i dati mancanti prima di acquistare."
+    Else
+        Determinazione_Coordinate
+        MsgBox "uscito da coordinate"
+        
+        Generazione_PNR
+        MsgBox "uscito da pnr"
+        
+        Generazione_PIR
+        MsgBox "uscito da pir"
+        
+        Assegnazione_Posto
+        MsgBox "uscito da assegnazione_posto"
+        
+        '---DETERMINO IL NOMINATIVO---
+        Dim Nominativo As String
+        Nominativo = Me.Testo4 + " " + Me.Testo12
+        
+        Testo63.Value = Nominativo
+        
+        '---DETERMINO IL CERTIFICATO DEL SITO_INTERNET---
+        
+        sqlString = "SELECT CERTIFICATO FROM PROVA.SITO WHERE NOME='" & CasellaCombinata15.Value & "'"
+        
+        Set rst = New ADODB.Recordset
+        rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+        
+        'Dim Certificato As String
+        Certificato = rst.Fields("CERTIFICATO")
+        
+        Testo65.Value = Certificato
+        
+        '---INSERISCO LA PRENOTAZIONE---
+        sqlString = "INSERT INTO PROVA.PRENOTAZIONE(COMPAGNIA_AEREA, PNR, TARGA_AEREO, NOMINATIVO, IMBARCO_PRIORITARIO, POSTO, POSTAZIONE_CHECK_IN, CERTIFICATO_SITO, DATA_PARTENZA, NUMERO_GATE, ORA_PARTENZA, DESTINAZIONE, PREZZO) VALUES('" & _
+                    Me![CasellaCombinata13].Value & "','" & _
+                    Me![Testo60].Value & "','" & _
+                    Me![Testo68].Value & "','" & _
+                    Me![Testo63].Value & "','" & _
+                    Me![CasellaCombinata32].Value & "','" & _
+                    Me![Testo24].Value & "','" & _
+                    Me![Testo44].Value & "','" & _
+                    Me![Testo65].Value & "'," & _
+                    "TO_DATE('" & Me![CasellaCombinata11].Value & "','DD/MM/YYYY')" & ",'" & _
+                    Me![Testo61].Value & "','" & _
+                    Me![Testo26].Value & "','" & _
+                    Me![CasellaCombinata9].Value & "','" & _
+                    Me![Testo5].Value & "')"
+                        
+        Set command = New ADODB.command
+        
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = sqlString
+        command.Execute
+            
+        MsgBox "prenotazione inserita"
+        
+        If Interruttore58.Value = True Then
+            '---DETERMINO LA CAPACITA DELL'AEREO---
+            
+            sqlString = "SELECT CAPACITA FROM PROVA.BAGAGLIO WHERE TARGA_AEREO='" & Testo68.Value & "'"
+            
+            Set rst = New ADODB.Recordset
+            rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+            
+            Dim Capacita As String
+            Capacita = rst.Fields("CAPACITA")
+            Me.Testo67 = Capacita
+                   
+            '---INSERISCO IL BAGAGLIO---
+            sqlString = "INSERT INTO PROVA.BAGAGLIO(PIR, PNR_PRENOTAZIONE, TARGA_AEREO, CAPACITA, ASSICURAZIONE, TIPO, PESO, ALTEZZA, LARGHEZZA, PROFONDITA) VALUES('" & _
+                    Me![Testo48].Value & "','" & _
+                    Me![Testo60].Value & "','" & _
+                    Me![Testo68].Value & "','" & _
+                    Me![Testo67].Value & "','" & _
+                    Me![CasellaCombinata34].Value & "','" & _
+                    Me![CasellaCombinata36].Value & "','" & _
+                    Me![Testo39].Value & "','" & _
+                    Me![Testo41].Value & "','" & _
+                    Me![Testo43].Value & "','" & _
+                    Me![Testo45].Value & "')"
+                   
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = sqlString
+            command.Execute
+            
+            '---VERIFICO LA CAPIENZA DELLA STIVA---
+            Calcolo_Stiva
+            MsgBox "uscito da calcolo_stiva"
+            
+            If VarGlobali.Condiviso1 <> 0 Then
+                
+                'tutti i dati sul bagaglio inseriti saranno eliminati
+                MsgBox ("Record non valido: superata la capacità della stiva dell'aereo.")
+                sqlString = "DELETE FROM PROVA.BAGAGLIO WHERE PIR = '" & Me.Testo48.Value & "' AND PNR_PRENOTAZIONE = '" & Me.Testo60.Value & "'"
+                command.CommandText = sqlString
+                command.Execute
+                
+                'tutti i dati sulla prenotazione inseriti saranno eliminati
+                sqlString = "DELETE FROM PROVA.PRENOTAZIONE WHERE PNR = '" & Me.Testo60.Value & "' AND TARGA_AEREO = '" & Me.Testo68.Value & "'"
+                command.CommandText = sqlString
+                command.Execute
+                
+                MsgBox "la prenotazione è stata annullata."
+                
+                'informazioni su maschera cancellati, rieseguire la prenotazione
+                Form_Load
+            End If
+            
+            '---MODIFICHIAMO IL RECORD DEL PASSEGGERO NELLA TABELLA PASSEGGERO---
+            'ricordiamo che nella tabbella PASSEGGERO sono presenti anche i dati sulla prenotazione
+            
+            Dim Tmp As String
+            
+            VarGlobali.Condiviso1 = Testo0.Value
+            Data_Oracle
+            Tmp = VarGlobali.Condiviso1
+            
+            VarGlobali.Condiviso1 = Testo73.Value
+            Data_Oracle
+            
+            sqlString = "UPDATE PROVA.PASSEGGERO SET PNR_PRENOTAZIONE = '" & Me.Testo60.Value & "', TARGA_AEREO = '" & Me.Testo68 & "', DATA_EFFETTUA = TO_DATE('" & Tmp & "','MM/DD/YYYY'), DATA_OSPITA = TO_DATE('" & VarGlobali.Condiviso1 & "','MM/DD/YYYY'), POSTAZIONE_CHECK_IN = '" & Me.Testo44 & "', CODICE_TERMINAL =  '" & Me.Testo36 & "' WHERE CI = '" & Me.Testo125 & "'"
+        
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = sqlString
+        
+            command.Execute
+            Set command = Nothing
+            
+            Comando118.Enabled = False
+        End If
+        MsgBox "La sua prenotazione è stata effettuata con successo."
+        Comando130.Enabled = True
+    End If
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando119_Click()
+    Form_Load
+    Comando118.Enabled = True
+End Sub
+
+Private Sub Comando123_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_passeggero")
+End Sub
+
+Private Sub Comando124_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando130_Click()
+    
+    'stampa record corrente
+    MsgBox "esecuzione stampa record corrente"
+    DoCmd.OpenReport "Acquisto_report", acViewPreview
+    Form_Load
+    
+End Sub
+
+Private Sub Form_Load()
+    
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    Me.Testo125 = VarGlobali.Codice_utente
+    Me.Testo127 = VarGlobali.Ruolo
+    
+    Me.Testo125.Enabled = False
+    Me.Testo127.Enabled = False
+    
+    '---CASELLA COMBINATA SITO_INTERNET---
+    sqlString = "SELECT DISTINCT NOME FROM SITO"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+     
+    Me.CasellaCombinata15.RowSourceType = "Value List"
+    Me.CasellaCombinata15.RowSource = ""
+    
+    While Not rst.EOF
+            CasellaCombinata15.AddItem rst.Fields("NOME")
+            rst.MoveNext
+    Wend
+    Me.CasellaCombinata15 = Null
+    
+    '------------------------------------
+    
+    Me.Testo0 = Date
+    ViaggioInserito = False
+    BagaglioInserito = False
+    
+    Me.Comando130.Enabled = False
+    
+    Me.Testo5 = Null
+    Me.Testo39 = Null
+    Me.Testo41 = Null
+    Me.Testo43 = Null
+    Me.Testo45 = Null
+    Me.Testo63 = Null
+    Me.Testo65 = Null
+    Me.Testo67 = Null
+    
+    Me.Testo73 = Null
+    Me.Testo26 = Null
+    Me.Testo36 = Null
+    Me.Testo44 = Null
+    Me.Testo61 = Null
+    Me.Testo24 = Null
+    Me.Testo60 = Null
+    Me.Testo48 = Null
+    Me.Testo68 = Null
+    
+    Me.Testo5.Enabled = False
+    Me.Testo0.Enabled = False
+    
+    Me.Testo39.Enabled = False
+    Me.Testo41.Enabled = False
+    Me.Testo43.Enabled = False
+    Me.Testo45.Enabled = False
+    Me.Testo63.Enabled = False
+    Me.Testo65.Enabled = False
+    Me.Testo67.Enabled = False
+    
+    Me.Testo26.Enabled = False
+    Me.Testo36.Enabled = False
+    Me.Testo44.Enabled = False
+    Me.Testo73.Enabled = False
+    Me.Testo68.Enabled = False
+    Me.Testo24.Enabled = False
+    Me.Testo60.Enabled = False
+    Me.Testo48.Enabled = False
+    Me.Testo61.Enabled = False
+    
+    Me.CasellaCombinata7 = Null
+    Me.CasellaCombinata9 = Null
+    Me.CasellaCombinata11 = Null
+    Me.CasellaCombinata13 = Null
+    Me.CasellaCombinata32 = Null
+    Me.CasellaCombinata34 = Null
+    Me.CasellaCombinata36 = Null
+    Me.CasellaCombinata71 = Null
+    
+    Me.CasellaCombinata15.Enabled = True
+    Me.CasellaCombinata7.Enabled = False
+    Me.CasellaCombinata9.Enabled = False
+    Me.CasellaCombinata11.Enabled = False
+    Me.CasellaCombinata13.Enabled = False
+    Me.CasellaCombinata32.Enabled = False
+    Me.CasellaCombinata34.Enabled = False
+    Me.CasellaCombinata36.Enabled = False
+    Me.CasellaCombinata71.Enabled = False
+    
+    Me.Interruttore58.Enabled = True
+    Me.Interruttore59.Enabled = True
+End Sub
+
+Private Sub Controllo()
+    If ViaggioInserito = True And BagaglioInserito = True Then
+        Me.Testo5.Value = Round((Rnd() * 986) + 15, 2)
+    End If
+End Sub
+
+Private Sub Generazione_PNR()
+    
+    Dim Trovato As Integer
+           
+    Trovato = 0
+    Pnr = "123456"
+    While Trovato = 0
+        Dim i As Integer
+            For i = 1 To 6
+                If Int(Rnd() * 2) = 0 Then
+                    Mid$(Pnr, i, 1) = Chr(Int(26 * Rnd) + 65) 'lettera maiuscola casuale
+                Else
+                    Mid$(Pnr, i, 1) = Chr(Int(10 * Rnd) + 48) 'numero casuale
+                End If
+            Next
+                
+        sqlString = "SELECT PNR FROM PROVA.PRENOTAZIONE WHERE PNR<>'" & Pnr & "'"
+                
+        Set rst = New ADODB.Recordset
+        rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+                
+        If Not rst.EOF Then
+            Trovato = 1
+        End If
+    Wend
+    
+    Me.Testo60 = Pnr
+    
+End Sub
+
+Private Sub Generazione_PIR()
+    
+    Dim Trovato As Integer
+           
+    Trovato = 0
+    Pir = "1234567890"
+    While Trovato = 0
+        Dim i As Integer
+            For i = 1 To 10
+                If Int(Rnd() * 2) = 0 Then
+                    Mid$(Pir, i, 1) = Chr(Int(26 * Rnd) + 65) 'lettera maiuscola casuale
+                Else
+                    Mid$(Pir, i, 1) = Chr(Int(10 * Rnd) + 48) 'numero casuale
+                End If
+            Next
+                
+        sqlString = "SELECT PIR FROM PROVA.BAGAGLIO WHERE PIR<>'" & Pir & "'"
+                
+        Set rst = New ADODB.Recordset
+        rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+                
+        If Not rst.EOF Then
+            Trovato = 1
+        End If
+    Wend
+    
+    Me.Testo48 = Pir
+    
+End Sub
+
+Private Sub Assegnazione_Posto()
+      
+    Dim Trovato As Integer
+    Trovato = 0
+    
+    While Trovato = 0
+        
+        sqlString = "SELECT POSTI_TOT FROM PROVA.AEREO WHERE TARGA='" & Testo68.Value & "'"
+        
+        Set rst = New ADODB.Recordset
+        rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+        
+        Posto = Int(rst.Fields("POSTI_TOT") * Rnd()) + 1
+        
+        sqlString = "SELECT POSTO FROM PROVA.PRENOTAZIONE WHERE TARGA_AEREO='" & Testo68.Value & "' AND POSTO<>'" & Posto & "'"
+        
+        Set rst = New ADODB.Recordset
+        rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+        
+        If Not rst.EOF Then
+            Trovato = 1
+            
+            sqlString = "UPDATE PROVA.AEREO SET POSTI_ASSEGNATI = POSTI_ASSEGNATI + 1 WHERE TARGA = '" & Me.Testo68 & "'"
+        
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = sqlString
+        
+            command.Execute
+        End If
+    Wend
+    
+    Me.Testo24 = Posto
+    
+End Sub
+
+Private Sub Interruttore58_Click()
+    
+    Me.CasellaCombinata34 = Null
+    Me.CasellaCombinata36 = Null
+    
+    Me.Testo39 = Null
+    Me.Testo41 = Null
+    Me.Testo43 = Null
+    Me.Testo45 = Null
+    
+    Me.CasellaCombinata34.Enabled = True
+    Me.CasellaCombinata36.Enabled = True
+    
+    Me.Testo39.Enabled = True
+    Me.Testo41.Enabled = True
+    Me.Testo43.Enabled = True
+    Me.Testo45.Enabled = True
+    
+    '---CASELLA COMBINATA TIPO_BAGAGLIO---
+    sqlString = "SELECT DISTINCT TIPO FROM BAGAGLIO"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+     
+    Me.CasellaCombinata36.RowSourceType = "Value List"
+    Me.CasellaCombinata36.RowSource = ""
+    
+    While Not rst.EOF
+            CasellaCombinata36.AddItem rst.Fields("TIPO")
+            rst.MoveNext
+    Wend
+    Me.CasellaCombinata36 = Null
+    
+    '---CASELLA COMBINATA ASSICURAZIONE_BAGAGLIO---
+    sqlString = "SELECT DISTINCT ASSICURAZIONE FROM BAGAGLIO"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+     
+    Me.CasellaCombinata34.RowSourceType = "Value List"
+    Me.CasellaCombinata34.RowSource = ""
+    
+    While Not rst.EOF
+            CasellaCombinata34.AddItem rst.Fields("ASSICURAZIONE")
+            rst.MoveNext
+    Wend
+    Me.CasellaCombinata34 = Null
+End Sub
+
+Private Sub Interruttore59_Click()
+    
+    Me.CasellaCombinata34 = Null
+    Me.CasellaCombinata36 = Null
+    
+    Me.Testo39 = Null
+    Me.Testo41 = Null
+    Me.Testo43 = Null
+    Me.Testo45 = Null
+    
+    Me.CasellaCombinata34.Enabled = False
+    Me.CasellaCombinata36.Enabled = False
+    
+    Me.Testo39.Enabled = False
+    Me.Testo41.Enabled = False
+    Me.Testo43.Enabled = False
+    Me.Testo45.Enabled = False
+    
+    Me.Interruttore58.Enabled = False
+    Me.Interruttore59.Enabled = False
+    
+    BagaglioInserito = True
+    
+    Controllo
+End Sub
+
+Private Sub Calcolo_Stiva()
+
+    VarGlobali.Condiviso1 = 0
+    
+    sqlString = "SELECT SUM(PROFONDITA*LARGHEZZA*ALTEZZA) AS VOLUME FROM PROVA.BAGAGLIO WHERE TARGA_AEREO = '" & Me.Testo68 & "'"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    If Me.Testo67.Value <= rst.Fields("VOLUME") Then
+        MsgBox ("ERRORE: si è raggiunta la capacità massima della stiva, non sono ammessi altri bagagli.")
+        VarGlobali.Condiviso1 = 1
+    End If
+End Sub
+
+Private Sub Determinazione_Coordinate()
+    
+    sqlString = "SELECT ORA_PARTENZA, TARGA_AEREO, CODICE_TERMINAL FROM PROVA.VOLO WHERE AERO_PARTENZA = '" & Me.CasellaCombinata7 & "' AND AERO_DESTINAZIONE = '" & Me.CasellaCombinata9 & "' AND ORA_PARTENZA = '" & Me.CasellaCombinata71 & "'"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo73 = Me.CasellaCombinata11
+    Me.Testo26 = rst.Fields("ORA_PARTENZA")
+    Me.Testo36 = rst.Fields("CODICE_TERMINAL")
+    Me.Testo68 = rst.Fields("TARGA_AEREO")
+    
+    sqlString = "SELECT PNR, NUMERO_GATE, POSTAZIONE_CHECK_IN FROM PROVA.PRENOTAZIONE WHERE TARGA_AEREO = '" & Me.Testo68 & "'"
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    If rst.EOF Then
+        
+        Dim i As Integer
+        Dim Mol_Gate As Integer
+        'Dim Mol_Check_in As Integer
+        Dim Var_casuale As Integer
+        
+        sqlString = "SELECT COUNT(C.POSTAZIONE) AS N_GATE, COUNT(G.NUMERO) AS N_CHECK_IN FROM PROVA.PASSEGGERO P JOIN PROVA.CHECK_IN C ON P.POSTAZIONE_CHECK_IN=C.POSTAZIONE JOIN PROVA.GATE G ON G.POSTAZIONE_CHECK_IN=C.POSTAZIONE"
+    
+        Set rst = New ADODB.Recordset
+        rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+        
+        Mol_Gate = rst.Fields("N_GATE")
+        'Mol_Check_in = rst.Fields("N_CHECK_IN")
+        
+        sqlString = "SELECT C.POSTAZIONE, G.NUMERO FROM PROVA.PASSEGGERO P JOIN PROVA.CHECK_IN C ON P.POSTAZIONE_CHECK_IN=C.POSTAZIONE JOIN PROVA.GATE G ON G.POSTAZIONE_CHECK_IN=C.POSTAZIONE"
+    
+        Set rst = New ADODB.Recordset
+        rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+        
+        Var_casuale = Int(Rnd() * Mol_Gate) + 1
+        
+        For i = 1 To Var_casuale
+            rst.MoveNext
+        Next
+        
+        i = 0
+        
+        Me.Testo44 = rst.Fields("C.POSTAZIONE")
+        Me.Testo61 = rst.Fields("G.NUMERO")
+    Else
+        Me.Testo44 = rst.Fields("POSTAZIONE_CHECK_IN")
+        Me.Testo61 = rst.Fields("NUMERO_GATE")
+        Me.Testo44 = rst.Fields("POSTAZIONE_CHECK_IN")
+    End If
+End Sub
+
+Private Sub Data_Oracle()
+
+    'parsing della data di tipo stringa
+    Dim Conversione_data() As String
+    Conversione_data = Split(VarGlobali.Condiviso1, "/")
+    
+    'switch giorni con mesi
+    Dim Tmp As String
+    Tmp = Conversione_data(0)
+    Conversione_data(0) = Conversione_data(1)
+    Conversione_data(1) = Tmp
+    
+    'ricostruzione data di tipo stringa
+    Dim Data_Stringa As String
+    Data_Stringa = Join(Conversione_data, "/")
+    
+    VarGlobali.Condiviso1 = Data_Stringa
+
+End Sub
+
+

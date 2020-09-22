@@ -1,0 +1,311 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim command As ADODB.command
+Dim ConnString As String
+Dim sqlString As String
+Dim nuovoRecord As Boolean
+Dim ricercaRecord As Boolean
+
+Private Sub CasellaControllo72_Click()
+    If (nuovoRecord = False) Then
+        Me.Testo0 = Null
+        If VarGlobali.Ruolo = "Admin" Then
+            Me.Testo12 = Null
+        End If
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo74 = Null
+    
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub CasellaControllo76_Click()
+    
+    If (ricercaRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo74 = Null
+        
+        Me.Testo0.Enabled = True
+        Me.Testo12.Enabled = True
+        Me.Testo20.Enabled = True
+        Me.Testo28.Enabled = True
+        Me.Testo36.Enabled = True
+        Me.Testo74.Enabled = True
+    
+        ricercaRecord = True
+    Else
+        ricercaRecord = False
+        Form_Load
+    End If
+    
+End Sub
+
+Private Sub Comando56_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando57_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando58_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando59_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando61_Click()
+     On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36)) Then
+            stmSql = "INSERT INTO PROVA.TERMINAL(CODICE, NOME_AEROPORTO, NOME, ZONA, CAPIENZA, GRANDEZZA) VALUES('" & _
+                Me![Testo0].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo20].Value & "','" & _
+                Me![Testo28].Value & "','" & _
+                Me![Testo74].Value & "','" & _
+                Me![Testo36].Value & "')"
+                
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+    
+            MsgBox ("Record inserito con successo.")
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando62_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.TERMINAL WHERE CODICE = '" & rst.Fields("CODICE") & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        'MsgBox stmSQL
+        
+        command.Execute
+        MsgBox ("Record in TERMINAL eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando63_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+                
+            stmSql = "UPDATE PROVA.TERMINAL SET " & _
+                    "NOME_AEROPORTO = '" & Me.Testo12 & "'," & _
+                    "NOME = '" & Me.Testo20 & "'," & _
+                    "ZONA = '" & Me.Testo28 & "'," & _
+                    "CAPIENZA = '" & Me.Testo74 & "'," & _
+                    "GRANDEZZA = '" & Me.Testo36 & "'" & _
+                    "WHERE CODICE = '" & Me.Testo0 & "'"
+        
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            'MsgBox stmSQL
+        
+            command.Execute
+            MsgBox ("Record in TERMINAL modificato con successo.")
+            Set command = Nothing
+        
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando64_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_aeroporto")
+End Sub
+
+Private Sub Comando71_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando91_Click()
+    
+    On Error GoTo ErrorHandler
+    If ricercaRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) And IsNull(Me.Testo12) And IsNull(Me.Testo20) And IsNull(Me.Testo28) And IsNull(Me.Testo36) And IsNull(Me.Testo74)) Then
+            
+            If VarGlobali.Ruolo = "Admin" Then
+                MsgBox "0"
+                sqlString = "SELECT * FROM PROVA.TERMINAL WHERE CODICE='" & Me![Testo0].Value & "' OR NOME_AEROPORTO='" & Me![Testo12].Value & "' OR NOME='" & Me![Testo20].Value & "' OR ZONA='" & Me![Testo28].Value & "' OR GRANDEZZA='" & Me![Testo36].Value & "' OR CAPIENZA='" & Me![Testo74].Value & "'"
+            Else
+                sqlString = "SELECT * FROM PROVA.TERMINAL WHERE CODICE='" & Me![Testo0].Value & "' OR NOME_AEROPORTO='" & VarGlobali.Condiviso & "' OR NOME='" & Me![Testo20].Value & "' OR ZONA='" & Me![Testo28].Value & "' OR GRANDEZZA='" & Me![Testo36].Value & "' OR CAPIENZA='" & Me![Testo74].Value & "'"
+            End If
+    
+            Set rst = New ADODB.Recordset
+            rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+            
+            If rst.BOF Then
+                MsgBox ("Nessun record trovato, controlla di aver inserito valori corretti.")
+                ricercaRecord = False
+                Form_Load
+            Else
+                MsgBox ("record/s trovato/i con successo.")
+            End If
+        Else
+            MsgBox ("Ricerca non riuscita, controlla di aver inserito almeno un campo")
+            ricercaRecord = False
+            Form_Load
+        End If
+    End If
+    CasellaControllo76.Value = False
+    RefreshData
+    Accesso
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+    
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.TERMINAL"
+    Else
+        sqlString = "SELECT * FROM PROVA.TERMINAL WHERE NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo66 = VarGlobali.Codice_utente
+    Me.Testo68 = VarGlobali.Ruolo
+
+    Me.Testo66.Enabled = False
+    Me.Testo68.Enabled = False
+    
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo12 = rst.Fields("NOME_AEROPORTO")
+        Me.Testo20 = rst.Fields("NOME")
+        Me.Testo28 = rst.Fields("ZONA")
+        Me.Testo36 = rst.Fields("GRANDEZZA")
+        Me.Testo0 = rst.Fields("CODICE")
+        Me.Testo74 = rst.Fields("CAPIENZA")
+    End If
+    
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                CasellaControllo72.Enabled = True
+                CasellaControllo76.Enabled = True
+                Comando56.Enabled = True
+                Comando57.Enabled = True
+                Comando58.Enabled = True
+                Comando59.Enabled = True
+                Comando61.Enabled = True
+                Comando62.Enabled = True
+                Comando63.Enabled = True
+                Comando64.Enabled = True
+                Comando71.Enabled = True
+            Case "Dirigente"
+                CasellaControllo72.Enabled = True
+                CasellaControllo76.Enabled = True
+                Comando56.Enabled = True
+                Comando57.Enabled = True
+                Comando58.Enabled = True
+                Comando59.Enabled = True
+                Comando61.Enabled = True
+                Comando62.Enabled = True
+                Comando63.Enabled = True
+                Comando64.Enabled = True
+                Comando71.Enabled = True
+                
+                Me.Testo12.Enabled = False
+            Case "Dipendente"
+                CasellaControllo72.Enabled = False
+                CasellaControllo76.Enabled = True
+                Comando56.Enabled = True
+                Comando57.Enabled = True
+                Comando58.Enabled = True
+                Comando59.Enabled = True
+                Comando61.Enabled = False
+                Comando62.Enabled = False
+                Comando63.Enabled = False
+                Comando64.Enabled = True
+                Comando71.Enabled = True
+                
+                Me.Testo0.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo36.Enabled = False
+                Me.Testo74.Enabled = False
+        End Select
+End Sub

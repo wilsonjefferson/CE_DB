@@ -1,0 +1,80 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+
+Private Sub Comando49_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando50_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando51_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando52_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando63_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_plancia")
+End Sub
+
+Private Sub Comando64_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.TERMINAL T JOIN PROVA.PASSEGGERO P1 ON T.CODICE=P1.CODICE_TERMINAL JOIN PROVA.PRENOTAZIONE P2 ON P1.PNR_PRENOTAZIONE=P2.PNR"
+    Else
+        sqlString = "SELECT * FROM PROVA.TERMINAL T JOIN PROVA.PASSEGGERO P1 ON T.CODICE=P1.CODICE_TERMINAL JOIN PROVA.PRENOTAZIONE P2 ON P1.PNR_PRENOTAZIONE=P2.PNR WHERE T.NOME_AEROPORTO= '" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo58 = VarGlobali.Codice_utente
+    Me.Testo60 = VarGlobali.Ruolo
+    
+    Me.Testo58.Enabled = False
+    Me.Testo60.Enabled = False
+    
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("NOME_AEROPORTO")
+        Me.Testo4 = rst.Fields("DATA_OSPITA")
+        Me.Testo12 = rst.Fields("NOMINATIVO")
+        Me.Testo20 = rst.Fields("PNR")
+        Me.Testo28 = rst.Fields("TARGA_AEREO")
+    End If
+End Sub

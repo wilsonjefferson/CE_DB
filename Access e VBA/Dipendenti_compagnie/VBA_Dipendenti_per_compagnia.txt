@@ -1,0 +1,83 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+
+Private Sub Comando150_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando151_Click()
+    rst.MovePrevious
+      If (rst1BOF = True Or rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando152_Click()
+    rst.MoveNext
+        If (rst.EOF = True Or rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando153_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando154_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_plancia")
+End Sub
+
+Private Sub Comando155_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.PERSONALE P JOIN PROVA.DI_ARIA A ON P.CODICE_STAFF=A.CODICE_STAFF_PERSONALE"
+    Else
+        sqlString = "SELECT * FROM PROVA.PERSONALE P JOIN PROVA.DI_ARIA A ON P.CODICE_STAFF=A.CODICE_STAFF_PERSONALE WHERE P.NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo156 = VarGlobali.Codice_utente
+    Me.Testo158 = VarGlobali.Ruolo
+    
+    Me.Testo156.Enabled = False
+    Me.Testo158.Enabled = False
+    
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo79 = rst.Fields("NOME_COMPAGNIA")
+        Me.Testo83 = rst.Fields("NOME_AEROPORTO")
+        Me.Testo91 = rst.Fields("NOME")
+        Me.Testo99 = rst.Fields("COGNOME")
+        Me.Testo107 = rst.Fields("CODICE_STAFF")
+        Me.Testo115 = rst.Fields("RUOLO")
+        Me.Testo123 = rst.Fields("GRADO")
+    End If
+End Sub

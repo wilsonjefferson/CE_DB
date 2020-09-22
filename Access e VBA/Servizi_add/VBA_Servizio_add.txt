@@ -1,0 +1,381 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+Dim stmSql As String
+Dim command As ADODB.command
+Dim nuovoRecord As Boolean
+Dim ricercaRecord As Boolean
+
+Private Sub CasellaControllo88_Click()
+    If (nuovoRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo52 = Null
+    
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub CasellaControllo98_Click()
+    
+    If (ricercaRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo52 = Null
+        
+        Me.Testo0.Enabled = True
+        Me.Testo4.Enabled = True
+        Me.Testo12.Enabled = True
+        Me.Testo20.Enabled = True
+        Me.Testo28.Enabled = True
+        Me.Testo36.Enabled = True
+        Me.Testo44.Enabled = True
+        Me.Testo52.Enabled = True
+    
+        ricercaRecord = True
+    Else
+        ricercaRecord = False
+        Form_Load
+    End If
+    
+End Sub
+
+Private Sub Comando80_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando81_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando82_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando83_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando84_Click()
+    If VarGlobali.Ruolo <> "Admin" Then
+        VarGlobali.Condiviso1 = rst.Fields("IVA")
+    End If
+    
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_contratto_ente")
+End Sub
+
+Private Sub Comando85_Click()
+    On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36)) Then
+            stmSql = "INSERT INTO PROVA.SERVIZIO_ADD(NOME_SERVIZIO, IVA, RESPONSABILE, TIPO_SERVIZIO, PERMESSI, AREA_OCCUPATA, N_IMPIEGATI, N_MAGAZZINO) VALUES('" & _
+                Me![Testo0].Value & "','" & _
+                Me![Testo4].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo20].Value & "','" & _
+                Me![Testo28].Value & "','" & _
+                Me![Testo36].Value & "','" & _
+                Me![Testo44].Value & "','" & _
+                Me![Testo52].Value & "')"
+                
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+    
+            MsgBox ("Record inserito con successo.")
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando86_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.SERVIZIO_ADD WHERE IVA = '" & rst.Fields("IVA") & "' AND RESPONSABILE = '" & rst.Fields("RESPONSABILE") & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        'MsgBox stmSQL
+        
+        command.Execute
+        MsgBox ("Record in SERVIZIO_ADD eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando87_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+                
+            stmSql = "UPDATE PROVA.SERVIZIO_ADD SET " & _
+                    "NOME_SERVIZIO = '" & Me.Testo0 & "'," & _
+                    "TIPO_SERVIZIO = '" & Me.Testo20 & "'," & _
+                    "PERMESSI = '" & Me.Testo28 & "'," & _
+                    "AREA_OCCUPATA = '" & Me.Testo36 & "'," & _
+                    "N_IMPIEGATI = '" & Me.Testo44 & "'," & _
+                    "N_MAGAZZINO = '" & Me.Testo52 & "'" & _
+                    "WHERE IVA = '" & Me.Testo4 & "' AND RESPONSABILE = '" & Me.Testo12 & "'"
+        
+            Set dbConnection = New ADODB.Connection
+            ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+            dbConnection.Open ConnString, "PROVA", "prova"
+        
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            'MsgBox stmSql
+        
+            command.Execute
+            MsgBox ("Record in SERVIZIO_ADD modificato con successo.")
+            Set command = Nothing
+        
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando90_Click()
+     
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_link_servizi")
+End Sub
+
+Private Sub Comando91_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando97_Click()
+    
+    On Error GoTo ErrorHandler
+    If ricercaRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) And IsNull(Me.Testo4) And IsNull(Me.Testo12) And IsNull(Me.Testo20) And IsNull(Me.Testo28) And IsNull(Me.Testo36) And IsNull(Me.Testo44) And IsNull(Me.Testo52)) Then
+            
+            If VarGlobali.Ruolo = "Admin" Then
+                sqlString = "SELECT * FROM PROVA.SERVIZIO_ADD WHERE NOME_SERVIZIO='" & Me![Testo0].Value & "' OR IVA='" & Me![Testo4].Value & "' OR RESPONSABILE='" & Me![Testo12].Value & "' OR TIPO_SERVIZIO='" & Me![Testo20].Value & "' OR PERMESSI='" & Me![Testo28].Value & "' OR AREA_OCCUPATA='" & Me![Testo36].Value & "' OR N_IMPIEGATI='" & Me![Testo44].Value & "' OR N_MAGAZZINO='" & Me![Testo52].Value & "'"
+            Else
+                sqlString = "SELECT * FROM PROVA.SERVIZIO_ADD S INNER JOIN PROVA.MUNITO M ON S.IVA=M.IVA_ADD AND S.RESPONSABILE=M.RESPONSABILE_ADD WHERE M.NOME_AEROPORTO='" & VarGlobali.Condiviso & "' AND (S.NOME_SERVIZIO='" & Me![Testo0].Value & "' OR S.IVA='" & Me![Testo4].Value & "' OR S.RESPONSABILE='" & Me![Testo12].Value & "' OR S.TIPO_SERVIZIO='" & Me![Testo20].Value & "' OR S.PERMESSI='" & Me![Testo28].Value & "' OR S.AREA_OCCUPATA='" & Me![Testo36].Value & "' OR S.N_IMPIEGATI='" & Me![Testo44].Value & "' OR S.N_MAGAZZINO='" & Me![Testo52].Value & "')"
+            End If
+    
+            Set rst = New ADODB.Recordset
+            rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+            If rst.BOF Then
+                MsgBox ("Nessun record trovato, controlla di aver inserito valori corretti.")
+                CasellaControllo98.Value = False
+                ricercaRecord = False
+                Form_Load
+            Else
+                MsgBox ("record/s trovato/i con successo.")
+            End If
+        Else
+            MsgBox ("Ricerca non riuscita, controlla di aver inserito almeno un campo")
+            CasellaControllo98.Value = False
+            Form_Load
+        End If
+    End If
+    RefreshData
+    Accesso
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+    
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.SERVIZIO_ADD"
+    Else
+        sqlString = "SELECT * FROM PROVA.SERVIZIO_ADD S JOIN PROVA.MUNITO M ON S.IVA=M.IVA_ADD AND S.RESPONSABILE=M.RESPONSABILE_ADD WHERE M.NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo92 = VarGlobali.Codice_utente
+    Me.Testo94 = VarGlobali.Ruolo
+    
+    Me.Testo92.Enabled = False
+    Me.Testo94.Enabled = False
+    
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("NOME_SERVIZIO")
+        Me.Testo4 = rst.Fields("IVA")
+        Me.Testo12 = rst.Fields("RESPONSABILE")
+        Me.Testo20 = rst.Fields("TIPO_SERVIZIO")
+        Me.Testo28 = rst.Fields("PERMESSI")
+        Me.Testo36 = rst.Fields("AREA_OCCUPATA")
+        Me.Testo44 = rst.Fields("N_IMPIEGATI")
+        If VarGlobali.Codice_utente <> "Passeggero" Then
+            Me.Testo52 = rst.Fields("N_MAGAZZINO")
+        End If
+    End If
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                CasellaControllo88.Enabled = True
+                CasellaControllo98.Enabled = True
+                Opzione103.Enabled = True
+                Opzione105.Enabled = True
+                
+                Comando80.Enabled = True
+                Comando81.Enabled = True
+                Comando82.Enabled = True
+                Comando83.Enabled = True
+                Comando84.Enabled = True
+                Comando85.Enabled = True
+                Comando86.Enabled = True
+                Comando87.Enabled = True
+            Case "Dirigente"
+                CasellaControllo88.Enabled = True
+                CasellaControllo98.Enabled = True
+                Opzione103.Enabled = True
+                Opzione105.Enabled = True
+                
+                Comando80.Enabled = True
+                Comando81.Enabled = True
+                Comando82.Enabled = True
+                Comando83.Enabled = True
+                Comando84.Enabled = True
+                Comando85.Enabled = True
+                Comando86.Enabled = True
+                Comando87.Enabled = True
+            Case "Dipendente"
+                CasellaControllo88.Enabled = False
+                CasellaControllo98.Enabled = True
+                Opzione103.Enabled = True
+                Opzione105.Enabled = True
+                
+                Comando80.Enabled = True
+                Comando81.Enabled = True
+                Comando82.Enabled = True
+                Comando83.Enabled = True
+                Comando84.Enabled = False
+                Comando85.Enabled = False
+                Comando86.Enabled = False
+                Comando87.Enabled = False
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo36.Enabled = False
+                Me.Testo44.Enabled = False
+                Me.Testo52.Enabled = False
+            Case "Passeggero"
+                CasellaControllo88.Enabled = False
+                CasellaControllo98.Enabled = True
+                Opzione103.Enabled = True
+                Opzione105.Enabled = False
+                
+                Comando80.Enabled = True
+                Comando81.Enabled = True
+                Comando82.Enabled = True
+                Comando83.Enabled = True
+                Comando84.Enabled = False
+                Comando85.Enabled = False
+                Comando86.Enabled = False
+                Comando87.Enabled = False
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo36.Enabled = False
+                Me.Testo44.Enabled = False
+                Me.Testo52.Enabled = False
+        End Select
+End Sub
+
+Private Sub Opzione103_GotFocus()
+    
+    'stampa record corrente
+    MsgBox "esecuzione stampa record corrente"
+    DoCmd.OpenReport "Report_servizio_add", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "' AND IVA=" & Me.Testo4 & " AND RESPONSABILE='" & Me.Testo12 & "'"
+    Form_Load
+    
+End Sub
+
+Private Sub Opzione105_GotFocus()
+    
+    'stampa record corrente
+    MsgBox "esecuzione stampa record corrente"
+    DoCmd.OpenReport "Report_servizio_add", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    Form_Load
+    
+End Sub

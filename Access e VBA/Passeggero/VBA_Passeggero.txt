@@ -1,0 +1,415 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+Dim stmSql As String
+Dim command As ADODB.command
+Dim nuovoRecord As Boolean
+Dim ricercaRecord As Boolean
+
+Private Sub CasellaControllo121_Click()
+    
+    If (nuovoRecord = False) Then
+        If VarGlobali.Ruolo = "Admin" Or VarGlobali.Ruolo = "Dirigente" Then
+            Me.Testo0 = Null
+            Me.Testo28 = Null
+            Me.Testo36 = Null
+            Me.Testo44 = Null
+            Me.Testo52 = Null
+            Me.Testo60 = Null
+            Me.Testo68 = Null
+            Me.Testo76 = Null
+        End If
+        
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+    
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub CasellaControllo131_Click()
+    
+    If (ricercaRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo52 = Null
+        Me.Testo60 = Null
+        Me.Testo68 = Null
+        Me.Testo76 = Null
+    
+        ricercaRecord = True
+    Else
+        ricercaRecord = False
+        Form_Load
+    End If
+    
+End Sub
+
+Private Sub Comando111_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando112_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando113_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando114_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando116_Click()
+    If IsNull(Me.Testo36) And IsNull(Me.Testo44) And IsNull(Me.Testo60) And IsNull(Me.Testo68) And IsNull(Me.Testo76) Then
+        MsgBox "Non sono presenti prenotazioni."
+    Else
+        DoCmd.Close
+        DoCmd.OpenForm ("Maschera_prenotazione")
+    End If
+End Sub
+
+Private Sub Comando117_Click()
+    If IsNull(Me.Testo36) And IsNull(Me.Testo44) And IsNull(Me.Testo60) And IsNull(Me.Testo68) And IsNull(Me.Testo76) Then
+        MsgBox "Non sono presenti bagagli."
+    Else
+        DoCmd.Close
+        DoCmd.OpenForm ("Maschera_bagaglio")
+    End If
+End Sub
+
+Private Sub Comando118_Click()
+    On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36) Or IsNull(Me.Testo44) Or IsNull(Me.Testo60) Or IsNull(Me.Testo68) Or IsNull(Me.Testo76)) Then
+            stmSql = "INSERT INTO PROVA.PASSEGGERO(DATA_EFFETTUA, NOME, COGNOME, CI, FEDINA_PENALE, CODICE_TERMINAL, POSTAZIONE_CHECK_IN, N_SALA_ATTESA_SCALO, PNR_PRENOTAZIONE, TARGA_AEREO, DATA_OSPITA) VALUES(" & _
+                "TO_DATE('" & Me![Testo0].Value & "','DD/MM/YYYY')" & ",'" & _
+                Me![Testo4].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo20].Value & "','" & _
+                Me![Testo28].Value & "','" & _
+                Me![Testo36].Value & "','" & _
+                Me![Testo44].Value & "','" & _
+                Me![Testo52].Value & "','" & _
+                Me![Testo60].Value & "','" & _
+                Me![Testo68].Value & "'," & _
+                "TO_DATE('" & Me![Testo76].Value & "','DD/MM/YYYY')" & ")"
+                
+                '"TO_DATE('" & Me![Testo0].Value & "','DD/MM/YYYY'),'" & _
+                '"TO_DATE('" & Me![Testo76].Value & "','DD/MM/YYYY')'" & "'
+                
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+    
+            MsgBox ("Record inserito con successo.")
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando119_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.PASSEGGERO WHERE CI = '" & rst.Fields("CI") & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        'MsgBox stmSQL
+        
+        command.Execute
+        MsgBox ("Record in PASSEGGERO eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando120_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36) Or IsNull(Me.Testo44) Or IsNull(Me.Testo60) Or IsNull(Me.Testo68) Or IsNull(Me.Testo76)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+            
+            stmSql = "UPDATE PROVA.PASSEGGERO SET " & _
+                    "DATA_EFFETTUA = '" & Me.Testo0 & "'," & _
+                    "NOME = '" & Me.Testo4 & "'," & _
+                    "COGNOME = '" & Me.Testo12 & "'," & _
+                    "FEDINA_PENALE = '" & Me.Testo28 & "'," & _
+                    "CODICE_TERMINAL = '" & Me.Testo36 & "'," & _
+                    "POSTAZIONE_CHECK_IN = '" & Me.Testo44 & "'," & _
+                    "DATA_OSPITA = TO_DATE('" & Me.Testo76 & "','DD/MM/YYYY')," & _
+                    "N_SALA_ATTESA_SCALO = '" & Me.Testo52 & "'" & _
+                    "WHERE CI = '" & Me.Testo20 & "' AND PNR_PRENOTAZIONE = '" & Testo60 & "' AND TARGA_AEREO = '" & Testo68 & "'"
+            
+            Set dbConnection = New ADODB.Connection
+            ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+            dbConnection.Open ConnString, "PROVA", "prova"
+            
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            MsgBox stmSql
+        
+            command.Execute
+            MsgBox ("Record in PASSEGGERO modificato con successo.")
+            Set command = Nothing
+        
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando123_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_home")
+End Sub
+
+Private Sub Comando124_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando130_Click()
+    'DoCmd.Close
+    DoCmd.OpenForm ("Maschera_acquisto")
+End Sub
+
+Private Sub Comando91_Click()
+    
+    On Error GoTo ErrorHandler
+    If ricercaRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) And IsNull(Me.Testo4) And IsNull(Me.Testo12) And IsNull(Me.Testo20) And IsNull(Me.Testo28) And IsNull(Me.Testo36) And IsNull(Me.Testo44) And IsNull(Me.Testo52) And IsNull(Me.Testo60) And IsNull(Me.Testo68) And IsNull(Me.Testo76)) Then
+            
+            If VarGlobali.Ruolo = "Admin" Then
+                sqlString = "SELECT * FROM PROVA.PASSEGGERO WHERE DATA_EFFETTUA='" & Me![Testo0].Value & "' OR NOME='" & Me![Testo4].Value & "' OR COGNOME='" & Me![Testo12].Value & "' OR CI='" & Me![Testo20].Value & "' OR FEDINA_PENALE='" & Me![Testo28].Value & "' OR CODICE_TERMINAL='" & Me![Testo36].Value & "' OR POSTAZIONE_CHECK_IN='" & Me![Testo44].Value & "' OR N_SALA_ATTESA_SCALO='" & Me![Testo52].Value & "' OR PNR_PRENOTAZIONE='" & Me![Testo60].Value & "' OR TARGA_AEREO='" & Me![Testo68].Value & "' OR DATA_OSPITA='" & Me![Testo76].Value & "'"
+            Else
+                If VarGlobali.Ruolo = "Passeggero" Then
+                    sqlString = "SELECT * FROM PROVA.PASSEGGERO WHERE CI='" & VarGlobali.Codice_utente & "' AND (DATA_EFFETTUA='" & Me![Testo0].Value & "' OR NOME='" & Me![Testo4].Value & "' OR COGNOME='" & Me![Testo12].Value & "' OR FEDINA_PENALE='" & Me![Testo28].Value & "' OR CODICE_TERMINAL='" & Me![Testo36].Value & "' OR POSTAZIONE_CHECK_IN='" & Me![Testo44].Value & "' OR N_SALA_ATTESA_SCALO='" & Me![Testo52].Value & "' OR PNR_PRENOTAZIONE='" & Me![Testo60].Value & "' OR TARGA_AEREO='" & Me![Testo68].Value & "' OR DATA_OSPITA='" & Me![Testo76].Value & "')"
+                Else
+                    sqlString = "SELECT * FROM PROVA.PASSEGGERO P JOIN PROVA.TERMINAL T ON P.CODICE_TERMINAL=T.CODICE WHERE T.NOME_AEROPORTO='" & VarGlobali.Condiviso & "' AND (P.DATA_EFFETTUA='" & Me![Testo0].Value & "' OR P.NOME='" & Me![Testo4].Value & "' OR P.COGNOME='" & Me![Testo12].Value & "' OR P.CI='" & Me![Testo20].Value & "' OR P.FEDINA_PENALE='" & Me![Testo28].Value & "' OR T.CODICE='" & Me![Testo36].Value & "' OR P.POSTAZIONE_CHECK_IN='" & Me![Testo44].Value & "' OR P.N_SALA_ATTESA_SCALO='" & Me![Testo52].Value & "' OR P.PNR_PRENOTAZIONE='" & Me![Testo60].Value & "' OR P.TARGA_AEREO='" & Me![Testo68].Value & "' OR P.DATA_OSPITA='" & Me![Testo76].Value & "')"
+                End If
+            End If
+    
+            Set rst = New ADODB.Recordset
+            rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+            If rst.BOF Then
+                MsgBox ("Nessun record trovato, controlla di aver inserito valori corretti.")
+                CasellaControllo131.Value = False
+                ricercaRecord = False
+                Form_Load
+            Else
+                MsgBox ("record/s trovato/i con successo.")
+            End If
+        Else
+            MsgBox ("Ricerca non riuscita, controlla di aver inserito almeno un campo")
+            CasellaControllo131.Value = False
+            Form_Load
+        End If
+    End If
+    RefreshData
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+    
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.PASSEGGERO"
+    Else
+        If VarGlobali.Ruolo = "Passeggero" Then
+            sqlString = "SELECT * FROM PROVA.PASSEGGERO WHERE CI='" & VarGlobali.Codice_utente & "'"
+        Else
+            sqlString = "SELECT * FROM PROVA.PASSEGGERO P INNER JOIN PROVA.TERMINAL T ON P.CODICE_TERMINAL=T.CODICE WHERE T.NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+        End If
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo125 = VarGlobali.Codice_utente
+    Me.Testo127 = VarGlobali.Ruolo
+    
+    Me.Testo125.Enabled = False
+    Me.Testo127.Enabled = False
+    
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("DATA_EFFETTUA")
+        Me.Testo4 = rst.Fields("NOME")
+        Me.Testo12 = rst.Fields("COGNOME")
+        Me.Testo20 = rst.Fields("CI")
+        Me.Testo28 = rst.Fields("FEDINA_PENALE")
+        Me.Testo36 = rst.Fields("CODICE_TERMINAL")
+        Me.Testo44 = rst.Fields("POSTAZIONE_CHECK_IN")
+        Me.Testo52 = rst.Fields("N_SALA_ATTESA_SCALO")
+        Me.Testo60 = rst.Fields("PNR_PRENOTAZIONE")
+        Me.Testo68 = rst.Fields("TARGA_AEREO")
+        Me.Testo76 = rst.Fields("DATA_OSPITA")
+    End If
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                CasellaControllo121.Enabled = True
+                CasellaControllo131.Enabled = True
+                Opzione136.Enabled = True
+                Opzione138.Enabled = True
+                
+                Comando111.Enabled = True
+                Comando112.Enabled = True
+                Comando113.Enabled = True
+                Comando114.Enabled = True
+                Comando118.Enabled = True
+                Comando119.Enabled = True
+                Comando120.Enabled = True
+                Comando123.Enabled = True
+                Comando124.Enabled = True
+            Case "Dirigente"
+                CasellaControllo121.Enabled = True
+                CasellaControllo131.Enabled = True
+                Opzione136.Enabled = True
+                Opzione138.Enabled = True
+                
+                Comando111.Enabled = True
+                Comando112.Enabled = True
+                Comando113.Enabled = True
+                Comando114.Enabled = True
+                Comando118.Enabled = True
+                Comando119.Enabled = True
+                Comando120.Enabled = True
+                Comando123.Enabled = True
+                Comando124.Enabled = True
+            Case "Dipendente"
+                CasellaControllo121.Enabled = False
+                CasellaControllo131.Enabled = False
+                Opzione136.Enabled = True
+                Opzione138.Enabled = False
+                
+                Comando111.Enabled = True
+                Comando112.Enabled = True
+                Comando113.Enabled = True
+                Comando114.Enabled = True
+                Comando118.Enabled = False
+                Comando119.Enabled = False
+                Comando120.Enabled = True
+                Comando123.Enabled = True
+                Comando124.Enabled = True
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo60.Enabled = False
+                Me.Testo68.Enabled = False
+                Me.Testo76.Enabled = False
+            Case "Passeggero"
+                CasellaControllo121.Enabled = False
+                CasellaControllo131.Enabled = False
+                Opzione136.Enabled = True
+                Opzione138.Enabled = False
+                
+                Comando111.Enabled = False
+                Comando112.Enabled = False
+                Comando113.Enabled = False
+                Comando114.Enabled = False
+                Comando118.Enabled = False
+                Comando119.Enabled = False
+                Comando120.Enabled = True
+                Comando123.Enabled = True
+                Comando124.Enabled = True
+        
+                Me.Testo0.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo36.Enabled = False
+                Me.Testo44.Enabled = False
+                Me.Testo52.Enabled = False
+                Me.Testo60.Enabled = False
+                Me.Testo68.Enabled = False
+                Me.Testo76.Enabled = False
+        End Select
+End Sub
+
+Private Sub Opzione136_GotFocus()
+    
+    'stampa record corrente
+    MsgBox "esecuzione stampa record corrente"
+    DoCmd.OpenReport "Report_passeggero", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "' AND CI='" & Me.Testo20 & "'"
+    Form_Load
+    
+End Sub
+
+Private Sub Opzione138_GotFocus()
+    
+    'stampa tutti i records dell'aeroporto
+    MsgBox "esecuzione stampa tutti i records"
+    DoCmd.OpenReport "Report_passeggero", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    Form_Load
+    
+End Sub

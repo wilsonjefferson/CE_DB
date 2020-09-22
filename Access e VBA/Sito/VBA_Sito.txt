@@ -1,0 +1,260 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+Dim stmSql As String
+Dim command As ADODB.command
+Dim nuovoRecord As Boolean
+
+
+Private Sub CasellaControllo68_Click()
+    If (nuovoRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo55 = Null
+    
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando51_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando52_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando53_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando54_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando58_Click()
+     On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo55)) Then
+            stmSql = "INSERT INTO PROVA.SITO(NOME, DOMINIO, EMAIL, SEDE, TELEFONO, CERTIFICATO) VALUES('" & _
+                Me![Testo0].Value & "','" & _
+                Me![Testo4].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo20].Value & "','" & _
+                Me![Testo28].Value & "','" & _
+                Me![Testo55].Value & "')"
+                
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+    
+            MsgBox ("Record inserito con successo.")
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando59_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.SITO WHERE CERTIFICATO = '" & rst.Fields("CERTIFICATO") & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        'MsgBox stmSQL
+        
+        command.Execute
+        MsgBox ("Record in SITO eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando60_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo55)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+                
+            stmSql = "UPDATE PROVA.SITO SET " & _
+                    "NOME = '" & Me.Testo0 & "'," & _
+                    "DOMINIO = '" & Me.Testo4 & "'," & _
+                    "EMAIL = '" & Me.Testo12 & "'," & _
+                    "SEDE = '" & Me.Testo20 & "'," & _
+                    "TELEFONO = '" & Me.Testo28 & "'" & _
+                    "WHERE CERTIFICATO = '" & Me.Testo55 & "'"
+        
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            'MsgBox stmSQL
+        
+            command.Execute
+            MsgBox ("Record in SITO modificato con successo.")
+            Set command = Nothing
+        
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando61_Click()
+    If VarGlobali.Ruolo <> "Admin" Then
+        VarGlobali.Condiviso = rst.Fields("T.NOME_AEROPORTO")
+        VarGlobali.Condiviso1 = Null
+    End If
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_prenotazione")
+End Sub
+
+Private Sub Comando62_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.SITO"
+    Else
+        sqlString = "SELECT T.NOME_AEROPORTO, S.CERTIFICATO, S.NOME, S.DOMINIO, S.EMAIL, S.SEDE, S.TELEFONO FROM PROVA.TERMINAL T INNER JOIN PROVA.PASSEGGERO P1 ON T.CODICE=P1.CODICE_TERMINAL INNER JOIN PROVA.PRENOTAZIONE P2 ON P2.PNR=P1.PNR_PRENOTAZIONE INNER JOIN PROVA.SITO S ON P2.CERTIFICATO_SITO=S.CERTIFICATO WHERE S.CERTIFICATO='" & VarGlobali.Condiviso1 & "' AND P2.PNR='" & VarGlobali.Condiviso & "'"
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo63 = VarGlobali.Codice_utente
+    Me.Testo65 = VarGlobali.Ruolo
+    
+    Me.Testo63.Enabled = False
+    Me.Testo65.Enabled = False
+    
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("NOME")
+        Me.Testo4 = rst.Fields("DOMINIO")
+        Me.Testo12 = rst.Fields("EMAIL")
+        Me.Testo20 = rst.Fields("SEDE")
+        Me.Testo28 = rst.Fields("TELEFONO")
+        Me.Testo55 = rst.Fields("CERTIFICATO")
+    End If
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                CasellaControllo68.Enabled = True
+                Comando51.Enabled = True
+                Comando52.Enabled = True
+                Comando53.Enabled = True
+                Comando54.Enabled = True
+                Comando58.Enabled = True
+                Comando59.Enabled = True
+                Comando60.Enabled = True
+                Comando60.Enabled = True
+                Comando61.Enabled = True
+            Case "Dirigente"
+                CasellaControllo68.Enabled = False
+                Comando51.Enabled = False
+                Comando52.Enabled = False
+                Comando53.Enabled = False
+                Comando54.Enabled = False
+                Comando58.Enabled = False
+                Comando59.Enabled = False
+                Comando60.Enabled = False
+                
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo55.Enabled = False
+            Case "Dipendente"
+                CasellaControllo68.Enabled = False
+                Comando51.Enabled = False
+                Comando52.Enabled = False
+                Comando53.Enabled = False
+                Comando54.Enabled = False
+                Comando58.Enabled = False
+                Comando59.Enabled = False
+                Comando60.Enabled = False
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo55.Enabled = False
+            Case "Passeggero"
+                CasellaControllo68.Enabled = False
+                Comando51.Enabled = False
+                Comando52.Enabled = False
+                Comando53.Enabled = False
+                Comando54.Enabled = False
+                Comando58.Enabled = False
+                Comando59.Enabled = False
+                Comando60.Enabled = False
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo55.Enabled = False
+        End Select
+End Sub

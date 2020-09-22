@@ -1,0 +1,407 @@
+Option Compare Database
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+Dim stmSql As String
+Dim command As ADODB.command
+Dim nuovoRecord As Boolean
+Dim ricercaRecord As Boolean
+
+Private Sub CasellaControllo137_Click()
+    If (nuovoRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo52 = Null
+        Me.Testo60 = Null
+        Me.Testo68 = Null
+        Me.Testo76 = Null
+        Me.Testo84 = Null
+        Me.Testo144 = Null
+    
+        nuovoRecord = True
+    Else
+        nuovoRecord = False
+        Form_Load
+    End If
+End Sub
+
+Private Sub CasellaControllo153_Click()
+    
+    If (ricercaRecord = False) Then
+        Me.Testo0 = Null
+        Me.Testo4 = Null
+        Me.Testo12 = Null
+        Me.Testo20 = Null
+        Me.Testo28 = Null
+        Me.Testo36 = Null
+        Me.Testo44 = Null
+        Me.Testo52 = Null
+        Me.Testo60 = Null
+        Me.Testo68 = Null
+        Me.Testo76 = Null
+        Me.Testo84 = Null
+        Me.Testo144 = Null
+    
+        ricercaRecord = True
+    Else
+        ricercaRecord = False
+        Form_Load
+    End If
+    
+End Sub
+
+Private Sub Comando124_Click()
+    rst.MoveFirst
+    RefreshData
+End Sub
+
+Private Sub Comando125_Click()
+    rst.MovePrevious
+      If (rst.BOF = True) Then
+        MsgBox ("Primo record. Non è possibile accedere al record precedente.")
+        rst.MoveFirst
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando126_Click()
+    rst.MoveNext
+        If (rst.EOF = True) Then
+        MsgBox ("Ultimo record. Non è possibile accedere al record successivo.")
+        rst.MoveLast
+        End If
+    RefreshData
+End Sub
+
+Private Sub Comando127_Click()
+    rst.MoveLast
+    RefreshData
+End Sub
+
+Private Sub Comando130_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_scalo")
+End Sub
+
+Private Sub Comando131_Click()
+    If VarGlobali.Ruolo <> "Admin" Then
+        VarGlobali.Condiviso = rst.Fields("PNR")
+        VarGlobali.Condiviso1 = rst.Fields("CERTIFICATO_SITO")
+    End If
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_sito")
+End Sub
+
+Private Sub Comando132_Click()
+    On Error GoTo ErrorHandler
+    If nuovoRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36) Or IsNull(Me.Testo44) Or IsNull(Me.Testo52) Or IsNull(Me.Testo60) Or IsNull(Me.Testo68) Or IsNull(Me.Testo76) Or IsNull(Me.Testo84)) Then
+            stmSql = "INSERT INTO PROVA.PRENOTAZIONE(COMPAGNIA_AEREA, PNR, TARGA_AEREO, NOMINATIVO, IMBARCO_PRIORITARIO, POSTO, POSTAZIONE_CHECK_IN, CERTIFICATO_SITO, DATA_PARTENZA, NUMERO_GATE, ORA_PARTENZA, DESTINAZIONE, PREZZO) VALUES('" & _
+                Me![Testo0].Value & "','" & _
+                Me![Testo4].Value & "','" & _
+                Me![Testo12].Value & "','" & _
+                Me![Testo20].Value & "','" & _
+                Me![Testo28].Value & "','" & _
+                Me![Testo36].Value & "','" & _
+                Me![Testo44].Value & "','" & _
+                Me![Testo52].Value & "'," & _
+                "TO_DATE('" & Me![Testo60].Value & "','DD/MM/YYYY')" & ",'" & _
+                Me![Testo68].Value & "','" & _
+                Me![Testo76].Value & "','" & _
+                Me![Testo144].Value & "','" & _
+                Me![Testo84].Value & "')"
+                
+            Set command = New ADODB.command
+    
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            command.Execute
+    
+            MsgBox ("Record inserito con successo.")
+            Set command = Nothing
+        Else
+            MsgBox ("Inserimento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+        End If
+    End If
+
+    Form_Load
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+End Sub
+
+Private Sub Comando133_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+    If MsgBox(msg, vbYesNo, "Eliminazione record") = vbYes Then
+        
+        stmSql = "DELETE FROM PROVA.PRENOTAZIONE WHERE PNR = '" & rst.Fields("PNR") & "'"
+        
+        Set command = New ADODB.command
+        command.CommandType = adCmdText
+        command.ActiveConnection = dbConnection
+        command.CommandText = stmSql
+        'MsgBox stmSQL
+        
+        command.Execute
+        MsgBox ("Record in PRENOTAZIONE eliminato con successo.")
+        Set command = Nothing
+        
+        Form_Load
+    End If
+End Sub
+
+Private Sub Comando134_Click()
+    Dim msg As String
+    msg = "Sei sicuro di voler continuare?"
+    
+   If Not (IsNull(Me.Testo0) Or IsNull(Me.Testo4) Or IsNull(Me.Testo12) Or IsNull(Me.Testo20) Or IsNull(Me.Testo28) Or IsNull(Me.Testo36) Or IsNull(Me.Testo44) Or IsNull(Me.Testo52) Or IsNull(Me.Testo60) Or IsNull(Me.Testo68) Or IsNull(Me.Testo76) Or IsNull(Me.Testo84) Or IsNull(Me.Testo144)) Then
+        If MsgBox(msg, vbYesNo, "Aggiornamento record") = vbYes Then
+                
+            stmSql = "UPDATE PROVA.PRENOTAZIONE SET " & _
+                    "COMPAGNIA_AEREA = '" & Me.Testo0 & "'," & _
+                    "NOMINATIVO = '" & Me.Testo20 & "'," & _
+                    "IMBARCO_PRIORITARIO = '" & Me.Testo28 & "'," & _
+                    "POSTO = '" & Me.Testo36 & "'," & _
+                    "POSTAZIONE_CHECK_IN = '" & Me.Testo44 & "'," & _
+                    "CERTIFICATO_SITO = '" & Me.Testo52 & "'," & _
+                    "DATA_PARTENZA = TO_DATE('" & Me.Testo60 & "','DD/MM/YYYY')," & _
+                    "NUMERO_GATE = '" & Me.Testo68 & "'," & _
+                    "ORA_PARTENZA = '" & Me.Testo76 & "'," & _
+                    "DESTINAZIONE = '" & Me.Testo144 & "'," & _
+                    "PREZZO = '" & Me.Testo84 & "'" & _
+                    "WHERE PNR = '" & Me.Testo4 & "' AND TARGA_AEREO='" & Me.Testo12 & "'"
+        
+            Set dbConnection = New ADODB.Connection
+            ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+            dbConnection.Open ConnString, "PROVA", "prova"
+        
+            Set command = New ADODB.command
+            command.CommandType = adCmdText
+            command.ActiveConnection = dbConnection
+            command.CommandText = stmSql
+            'MsgBox stmSQL
+        
+            command.Execute
+            MsgBox ("Record in PRENOTAZIONE modificato con successo.")
+            Set command = Nothing
+        
+            Form_Load
+        End If
+    Else
+        MsgBox ("Aggiornamento non riuscito, controlla di aver inserito tutti i campi obbligatori")
+    End If
+End Sub
+
+Private Sub Comando135_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_passeggero")
+End Sub
+
+Private Sub Comando136_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando91_Click()
+    
+    On Error GoTo ErrorHandler
+    If ricercaRecord = True Then
+    
+        If Not (IsNull(Me.Testo0) And IsNull(Me.Testo4) And IsNull(Me.Testo12) And IsNull(Me.Testo20) And IsNull(Me.Testo28) And IsNull(Me.Testo36) And IsNull(Me.Testo44) And IsNull(Me.Testo52) And IsNull(Me.Testo60) And IsNull(Me.Testo68) And IsNull(Me.Testo76) And IsNull(Me.Testo84) And IsNull(Me.Testo144)) Then
+            
+            If VarGlobali.Ruolo = "Admin" Then
+                sqlString = "SELECT * FROM PROVA.PRENOTAZIONE WHERE COMPAGNIA_AEREA='" & Me![Testo0].Value & "' OR CERTIFICATO_SITO='" & Me![Testo52].Value & "' OR PNR='" & Me![Testo4].Value & "' OR TARGA_AEREO='" & Me![Testo12].Value & "' OR NOMINATIVO='" & Me![Testo20].Value & "' OR IMBARCO_PRIORITARIO='" & Me![Testo28].Value & "' OR POSTO='" & Me![Testo36].Value & "' OR POSTAZIONE_CHECK_IN='" & Me![Testo44].Value & "' OR NUMERO_GATE='" & Me![Testo68].Value & "' OR DATA_PARTENZA='" & Me![Testo60].Value & "' OR ORA_PARTENZA='" & Me![Testo76].Value & "' OR DESTINAZIONE='" & Me![Testo144].Value & "' OR PREZZO='" & Me![Testo84].Value & "'"
+            Else
+                If VarGlobali.Ruolo <> "Passeggero" Then
+                    sqlString = "SELECT * FROM PROVA.PRENOTAZIONE P1 JOIN PROVA.PASSEGGERO P2 ON P1.PNR=P2.PNR_PRENOTAZIONE JOIN PROVA.TERMINAL T ON P2.CODICE_TERMINAL=T.CODICE WHERE T.NOME_AEROPORTO='" & VarGlobali.Condiviso & "' AND (P1.COMPAGNIA_AEREA='" & Me![Testo0].Value & "' OR P1.CERTIFICATO_SITO='" & Me![Testo52].Value & "' OR P1.PNR='" & Me![Testo4].Value & "' OR P1.TARGA_AEREO='" & Me![Testo12].Value & "' OR P1.NOMINATIVO='" & Me![Testo20].Value & "' OR P1.IMBARCO_PRIORITARIO='" & Me![Testo28].Value & "' OR P1.POSTO='" & Me![Testo36].Value & "' OR P1.POSTAZIONE_CHECK_IN='" & Me![Testo44].Value & "' OR P1.NUMERO_GATE='" & Me![Testo68].Value & "' OR P1.DATA_PARTENZA='" & Me![Testo60].Value & "' OR P1.ORA_PARTENZA='" & Me![Testo76].Value & "' OR P1.DESTINAZIONE='" & Me![Testo144].Value & "' OR P1.PREZZO='" & Me![Testo84].Value & "')"
+                End If
+            End If
+    
+            Set rst = New ADODB.Recordset
+            rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+            If rst.BOF Then
+                MsgBox ("Nessun record trovato, controlla di aver inserito valori corretti.")
+                CasellaControllo153.Value = False
+                ricercaRecord = False
+                Form_Load
+            Else
+                MsgBox ("record/s trovato/i con successo.")
+            End If
+        Else
+            MsgBox ("Ricerca non riuscita, controlla di aver inserito almeno un campo")
+            CasellaControllo153.Value = False
+            Form_Load
+        End If
+    End If
+    RefreshData
+Exit Sub
+
+ErrorHandler:
+  If (Err.Number <> 0) Then
+    MsgBox ("Errore: " & Err.Description)
+  End If
+    
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+    
+    If VarGlobali.Ruolo = "Admin" Then
+        sqlString = "SELECT * FROM PROVA.PRENOTAZIONE"
+    Else
+        If VarGlobali.Ruolo = "Passeggero" Then
+            sqlString = "SELECT * FROM PROVA.PRENOTAZIONE P1 JOIN PROVA.PASSEGGERO P2 ON P1.PNR=P2.PNR_PRENOTAZIONE WHERE P2.CI='" & VarGlobali.Codice_utente & "'"
+        Else
+            sqlString = "SELECT * FROM PROVA.PRENOTAZIONE P1 JOIN PROVA.PASSEGGERO P2 ON P1.PNR=P2.PNR_PRENOTAZIONE JOIN PROVA.TERMINAL T ON P2.CODICE_TERMINAL=T.CODICE WHERE T.NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+        End If
+    End If
+    
+    Set rst = New ADODB.Recordset
+    rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+    Me.Testo139 = VarGlobali.Codice_utente
+    Me.Testo141 = VarGlobali.Ruolo
+    
+    Me.Testo139.Enabled = False
+    Me.Testo141.Enabled = False
+    
+    Accesso
+    RefreshData
+End Sub
+
+Private Sub RefreshData()
+        
+    If Not rst.BOF And Not rst.EOF Then
+        Me.Testo0 = rst.Fields("COMPAGNIA_AEREA")
+        Me.Testo4 = rst.Fields("PNR")
+        Me.Testo12 = rst.Fields("TARGA_AEREO")
+        Me.Testo20 = rst.Fields("NOMINATIVO")
+        Me.Testo28 = rst.Fields("IMBARCO_PRIORITARIO")
+        Me.Testo36 = rst.Fields("POSTO")
+        Me.Testo44 = rst.Fields("POSTAZIONE_CHECK_IN")
+        Me.Testo52 = rst.Fields("CERTIFICATO_SITO")
+        Me.Testo60 = rst.Fields("DATA_PARTENZA")
+        Me.Testo68 = rst.Fields("NUMERO_GATE")
+        Me.Testo76 = rst.Fields("ORA_PARTENZA")
+        Me.Testo84 = rst.Fields("PREZZO")
+        Me.Testo144 = rst.Fields("DESTINAZIONE")
+    End If
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                CasellaControllo137.Enabled = True
+                CasellaControllo153.Enabled = True
+                Opzione158.Enabled = True
+                Opzione160.Enabled = True
+                
+                Comando124.Enabled = True
+                Comando125.Enabled = True
+                Comando126.Enabled = True
+                Comando127.Enabled = True
+                Comando132.Enabled = True
+                Comando133.Enabled = True
+                Comando134.Enabled = True
+            Case "Dirigente"
+                CasellaControllo137.Enabled = False
+                CasellaControllo153.Enabled = True
+                Opzione158.Enabled = True
+                Opzione160.Enabled = True
+                
+                Comando124.Enabled = True
+                Comando125.Enabled = True
+                Comando126.Enabled = True
+                Comando127.Enabled = True
+                Comando132.Enabled = False
+                Comando133.Enabled = False
+                Comando134.Enabled = False
+            Case "Dipendente"
+                CasellaControllo137.Enabled = False
+                CasellaControllo153.Enabled = False
+                Opzione158.Enabled = True
+                Opzione160.Enabled = False
+                
+                Comando124.Enabled = True
+                Comando125.Enabled = True
+                Comando126.Enabled = True
+                Comando127.Enabled = True
+                Comando132.Enabled = False
+                Comando133.Enabled = False
+                Comando134.Enabled = True
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo52.Enabled = False
+                Me.Testo60.Enabled = False
+                Me.Testo76.Enabled = False
+                Me.Testo84.Enabled = False
+                Me.Testo144.Enabled = False
+            Case "Passeggero"
+                CasellaControllo137.Enabled = False
+                CasellaControllo153.Enabled = False
+                Opzione158.Enabled = True
+                Opzione160.Enabled = False
+                
+                Comando124.Enabled = True
+                Comando125.Enabled = True
+                Comando126.Enabled = True
+                Comando127.Enabled = True
+                Comando132.Enabled = False
+                Comando133.Enabled = False
+                Comando134.Enabled = False
+        
+                Me.Testo0.Enabled = False
+                Me.Testo4.Enabled = False
+                Me.Testo12.Enabled = False
+                Me.Testo20.Enabled = False
+                Me.Testo28.Enabled = False
+                Me.Testo36.Enabled = False
+                Me.Testo44.Enabled = False
+                Me.Testo52.Enabled = False
+                Me.Testo60.Enabled = False
+                Me.Testo68.Enabled = False
+                Me.Testo76.Enabled = False
+                Me.Testo84.Enabled = False
+                Me.Testo144.Enabled = False
+        End Select
+End Sub
+
+Private Sub Opzione158_GotFocus()
+    
+    'stampa record corrente
+    MsgBox "esecuzione stampa record corrente"
+    DoCmd.OpenReport "Report_prenotazione", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "' AND PNR='" & Me.Testo4 & "' AND TARGA_AEREO='" & Me.Testo12 & "'"
+    Form_Load
+    
+End Sub
+
+Private Sub Opzione160_GotFocus()
+    
+    'stampa tutti i records dell'aeroporto
+    MsgBox "esecuzione stampa tutti i records"
+    DoCmd.OpenReport "Report_prenotazione", acViewPreview, , "NOME_AEROPORTO='" & VarGlobali.Condiviso & "'"
+    Form_Load
+    
+End Sub

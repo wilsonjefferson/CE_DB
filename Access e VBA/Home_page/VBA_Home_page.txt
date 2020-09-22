@@ -1,0 +1,118 @@
+Option Compare Database
+
+Dim rst As ADODB.Recordset
+Dim dbConnection As ADODB.Connection
+Dim ConnString As String
+Dim sqlString As String
+
+Private Sub Comando0_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_aeroporto")
+End Sub
+
+Private Sub Comando1_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_comunicato")
+End Sub
+
+Private Sub Comando14_Click()
+    MsgBox "Utente disconnesso"
+    VarGlobali.Codice_utente = Null
+    VarGlobali.Ruolo = Null
+    DoCmd.Close
+End Sub
+
+Private Sub Comando2_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_passeggero")
+End Sub
+
+Private Sub Comando3_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_personale")
+End Sub
+
+Private Sub Comando4_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_link_servizi")
+End Sub
+
+Private Sub Comando5_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_statistiche")
+End Sub
+
+Private Sub Comando6_Click()
+    DoCmd.Close
+    DoCmd.OpenForm ("Maschera_plancia")
+End Sub
+
+Private Sub Form_Load()
+
+    Set dbConnection = New ADODB.Connection
+    ConnString = "Data Source='connessione_db';Server='localhost';add connectionString={Microsoft ODBC for Oracle}"
+    dbConnection.Open ConnString, "PROVA", "prova"
+
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                ' non fare nulla
+            Case "Dirigente"
+                sqlString = "SELECT NOME_AEROPORTO AS NOME FROM PROVA.PERSONALE WHERE CODICE_STAFF='" & VarGlobali.Codice_utente & "'"
+            Case "Dipendente"
+                sqlString = "SELECT NOME_AEROPORTO AS NOME FROM PROVA.PERSONALE WHERE CODICE_STAFF='" & VarGlobali.Codice_utente & "'"
+            Case "Passeggero"
+                sqlString = "SELECT T.NOME_AEROPORTO AS NOME FROM PROVA.PASSEGGERO P JOIN PROVA.TERMINAL T ON P.CODICE_TERMINAL=T.CODICE WHERE P.CI='" & VarGlobali.Codice_utente & "'"
+        End Select
+        
+    If VarGlobali.Ruolo <> "Admin" Then
+        Set rst = New ADODB.Recordset
+        rst.Open sqlString, dbConnection, adLockReadOnly, adOpenStatic, adCmdText
+    
+        VarGlobali.Condiviso = rst.Fields("NOME")
+    End If
+    
+    Me.Testo7 = VarGlobali.Codice_utente
+    Me.Testo9 = VarGlobali.Ruolo
+    
+    Me.Testo7.Enabled = False
+    Me.Testo9.Enabled = False
+    
+    Accesso
+End Sub
+
+Private Sub Accesso()
+    Select Case VarGlobali.Ruolo
+            Case "Admin"
+                Comando0.Enabled = True
+                Comando1.Enabled = True
+                Comando2.Enabled = True
+                Comando3.Enabled = True
+                Comando4.Enabled = True
+                Comando5.Enabled = True
+                Comando6.Enabled = True
+            Case "Dirigente"
+                Comando0.Enabled = True
+                Comando1.Enabled = True
+                Comando2.Enabled = True
+                Comando3.Enabled = True
+                Comando4.Enabled = True
+                Comando5.Enabled = True
+                Comando6.Enabled = True
+            Case "Dipendente"
+                Comando0.Enabled = True
+                Comando1.Enabled = False
+                Comando2.Enabled = True
+                Comando3.Enabled = True
+                Comando4.Enabled = True
+                Comando5.Enabled = True
+                Comando6.Enabled = False
+            Case "Passeggero"
+                Comando0.Enabled = False
+                Comando1.Enabled = False
+                Comando2.Enabled = True
+                Comando3.Enabled = False
+                Comando4.Enabled = True
+                Comando5.Enabled = True
+                Comando6.Enabled = False
+        End Select
+End Sub
