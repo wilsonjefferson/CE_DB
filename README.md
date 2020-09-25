@@ -7,4 +7,4 @@ A joint effort of:
 
 ---
 
-Keep in mind that the project is developed in italian language, it is used both for documents and codes.
+Keep in mind that the project was developed in italian language, it used both for documents and codes.
